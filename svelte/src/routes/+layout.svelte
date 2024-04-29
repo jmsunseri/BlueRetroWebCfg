@@ -218,7 +218,7 @@
 						<p class="font-bold pb-4 text-xl">Selected BlueRetro Device</p>
 						<p>Device Name: {$device?.name || '...'}</p>
 						<p>
-							Installed Verison: {$deviceConfig?.appVersion || '...'}
+							Installed Version: {$deviceConfig?.appVersion || '...'}
 						</p>
 						<p>Bluetooth Address: {$deviceConfig?.bluetoothAddress || '...'}</p>
 					</div>
