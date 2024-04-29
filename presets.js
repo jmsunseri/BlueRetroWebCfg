@@ -13,7 +13,7 @@ var presets = new Array();
 var bluetoothDevice;
 let brService = null;
 var pageInit = 0;
-var consoles = []
+var consoles = {};
 var bdaddr = '';
 var app_ver = '';
 var latest_ver = '';
@@ -25,17 +25,16 @@ var current_cfg = 0;
 function initInputSelect() {
     //push all console names from JSON files
     for (var i = 0; i < presets.length; i++) {
-        consoles.push(presets[i].console)
+        consoles[presets[i].console] = presets[i].console;
     }
-    //filter out non-unique items
-    consoles = consoles.filter(onlyUnique)
+
     //set placeholder description
     document.getElementById("desc").textContent = "Select a system and then preset";
     var div = document.createElement("outputandconsole");
     var main = document.createElement("select");
 
     for (var i = 0; i < maxMainInput; i++) {
-        var option  = document.createElement("option");
+        var option = document.createElement("option");
         option.value = i;
         option.text = "Output " + (i + 1);
         main.add(option);
@@ -45,13 +44,13 @@ function initInputSelect() {
 
     var main = document.createElement("select");
     //add placeholder option
-    var option  = document.createElement("option");
-        option.value = -1;
-        option.text = "All";
-        main.add(option);
+    var option = document.createElement("option");
+    option.value = -1;
+    option.text = "All";
+    main.add(option);
     //add console filter options    
     for (var i = 0; i < consoles.length; i++) {
-        var option  = document.createElement("option");
+        var option = document.createElement("option");
         option.value = i;
         option.text = consoles[i];
         main.add(option);
@@ -100,38 +99,38 @@ function initOutputMapping() {
 }
 
 function fetchMap(presets, files, idx) {
-    return new Promise(function(resolve, reject) {
+    return new Promise(function (resolve, reject) {
         fetch("map/" + files[idx].name)
-        .then(rsp => {
-            return rsp.json();
-        })
-        .then(data => {
-            presets.push(data);
-            if (++idx < files.length) {
-                resolve(fetchMap(presets, files, idx));
-            }
-            else {
-                resolve(presets);
-            }
-        })
-        .catch(error => {
-            reject(error);
-        });
+            .then(rsp => {
+                return rsp.json();
+            })
+            .then(data => {
+                presets.push(data);
+                if (++idx < files.length) {
+                    resolve(fetchMap(presets, files, idx));
+                }
+                else {
+                    resolve(presets);
+                }
+            })
+            .catch(error => {
+                reject(error);
+            });
     });
 }
 
 function getMapList(url) {
-    return new Promise(function(resolve, reject) {
+    return new Promise(function (resolve, reject) {
         fetch(url)
-        .then(rsp => {
-            return rsp.json();
-        })
-        .then(data => {
-            resolve(data);
-        })
-        .catch(error => {
-            reject(error);
-        });
+            .then(rsp => {
+                return rsp.json();
+            })
+            .then(data => {
+                resolve(data);
+            })
+            .catch(error => {
+                reject(error);
+            });
     });
 }
 
@@ -142,17 +141,17 @@ function onlyUnique(value, index, self) {
 
 function initBlueRetroCfg() {
     getMapList('https://api.github.com/repos/darthcloud/BlueRetroWebCfg/contents/map/')
-    .then(files => {
-        return fetchMap(presets, files, 0);
-    })
-    .then(_ => {
-        initInputSelect();
-        initOutputMapping();
-        pageInit = 1;
-    })
-    .catch(error => {
-        log('Argh! ' + error);
-    });
+        .then(files => {
+            return fetchMap(presets, files, 0);
+        })
+        .then(_ => {
+            initInputSelect();
+            initOutputMapping();
+            pageInit = 1;
+        })
+        .catch(error => {
+            log('Argh! ' + error);
+        });
 }
 
 function saveInput() {
@@ -165,9 +164,9 @@ function saveInput() {
         var cfgId = Number(document.getElementById("inputSelect").value);
         document.getElementById("inputSaveText").style.display = 'none';
         savePresetInput(preset, brService, cfgId)
-        .then(_ => {
-            document.getElementById("inputSaveText").style.display = 'block';
-        });
+            .then(_ => {
+                document.getElementById("inputSaveText").style.display = 'block';
+            });
     }
 }
 
@@ -181,24 +180,24 @@ function onDisconnected() {
 
 function swGameIdCfg() {
     setGameIdCfg(brService)
-    .then(_ => {
-        return getCfgSrc(brService);
-    })
-    .then(value => {
-        current_cfg = value;
-        initCfgSelection();
-    })
+        .then(_ => {
+            return getCfgSrc(brService);
+        })
+        .then(value => {
+            current_cfg = value;
+            initCfgSelection();
+        })
 }
 
 function swDefaultCfg() {
     setDefaultCfg(brService)
-    .then(_ => {
-        return getCfgSrc(brService);
-    })
-    .then(value => {
-        current_cfg = value;
-        initCfgSelection();
-    })
+        .then(_ => {
+            return getCfgSrc(brService);
+        })
+        .then(value => {
+            current_cfg = value;
+            initCfgSelection();
+        })
 }
 
 function initCfgSelection() {
@@ -237,79 +236,81 @@ function initCfgSelection() {
 export function btConn() {
     log('Requesting Bluetooth Device...');
     navigator.bluetooth.requestDevice(
-        {filters: [{namePrefix: 'BlueRetro'}],
-        optionalServices: [brUuid[0]]})
-    .then(device => {
-        log('Connecting to GATT Server...');
-        name = device.name;
-        bluetoothDevice = device;
-        bluetoothDevice.addEventListener('gattserverdisconnected', onDisconnected);
-        return bluetoothDevice.gatt.connect();
-    })
-    .then(server => {
-        log('Getting BlueRetro Service...');
-        return server.getPrimaryService(brUuid[0]);
-    })
-    .catch(error => {
-        log(error.name);
-        throw 'Couldn\'t connect to BlueRetro';
-    })
-    .then(service => {
-        log('Init Cfg DOM...');
-        brService = service;
-        if (!pageInit) {
-            initBlueRetroCfg();
-        }
-        return getBdAddr(brService);
-    })
-    .then(value => {
-        bdaddr = value;
-        return getLatestRelease();
-    })
-    .then(value => {
-        latest_ver = value;
-        return getAppVersion(brService);
-    })
-    .then(value => {
-        app_ver = value;
-        return getGameId(brService);
-    })
-    .then(value => {
-        gameid = value;
-        return getGameName(gameid);
-    })
-    .then(value => {
-        gamename = value;
-        return getCfgSrc(brService);
-    })
-    .catch(error => {
-        if (error.name == 'NotFoundError'
-          || error.name == 'NotSupportedError') {
-            return 0;
-        }
-        throw error;
-    })
-    .then(value => {
-        current_cfg = value;
-        document.getElementById("divInfo").innerHTML = 'Connected to: ' + name + ' (' + bdaddr + ') [' + app_ver
-            + ']<br> Current Game: ' + gamename + ' (' + gameid + ')';
-        try {
-            if (app_ver.indexOf(latest_ver) == -1) {
-                document.getElementById("divInfo").innerHTML += '<br><br>Download latest FW ' + latest_ver + ' from <a href=\'https://darthcloud.itch.io/blueretro\'>itch.io</a>';
+        {
+            filters: [{ namePrefix: 'BlueRetro' }],
+            optionalServices: [brUuid[0]]
+        })
+        .then(device => {
+            log('Connecting to GATT Server...');
+            name = device.name;
+            bluetoothDevice = device;
+            bluetoothDevice.addEventListener('gattserverdisconnected', onDisconnected);
+            return bluetoothDevice.gatt.connect();
+        })
+        .then(server => {
+            log('Getting BlueRetro Service...');
+            return server.getPrimaryService(brUuid[0]);
+        })
+        .catch(error => {
+            log(error.name);
+            throw 'Couldn\'t connect to BlueRetro';
+        })
+        .then(service => {
+            log('Init Cfg DOM...');
+            brService = service;
+            if (!pageInit) {
+                initBlueRetroCfg();
             }
-        }
-        catch (e) {
-            // Just move on
-        }
-        document.getElementById("divBtConn").style.display = 'none';
-        document.getElementById("divInfo").style.display = 'block';
-        document.getElementById("divCfgSel").style.display = 'block';
-        document.getElementById("divInputCfg").style.display = 'block';
-        initCfgSelection();
-    })
-    .catch(error => {
-        log('Argh! ' + error);
-    });
+            return getBdAddr(brService);
+        })
+        .then(value => {
+            bdaddr = value;
+            return getLatestRelease();
+        })
+        .then(value => {
+            latest_ver = value;
+            return getAppVersion(brService);
+        })
+        .then(value => {
+            app_ver = value;
+            return getGameId(brService);
+        })
+        .then(value => {
+            gameid = value;
+            return getGameName(gameid);
+        })
+        .then(value => {
+            gamename = value;
+            return getCfgSrc(brService);
+        })
+        .catch(error => {
+            if (error.name == 'NotFoundError'
+                || error.name == 'NotSupportedError') {
+                return 0;
+            }
+            throw error;
+        })
+        .then(value => {
+            current_cfg = value;
+            document.getElementById("divInfo").innerHTML = 'Connected to: ' + name + ' (' + bdaddr + ') [' + app_ver
+                + ']<br> Current Game: ' + gamename + ' (' + gameid + ')';
+            try {
+                if (app_ver.indexOf(latest_ver) == -1) {
+                    document.getElementById("divInfo").innerHTML += '<br><br>Download latest FW ' + latest_ver + ' from <a href=\'https://darthcloud.itch.io/blueretro\'>itch.io</a>';
+                }
+            }
+            catch (e) {
+                // Just move on
+            }
+            document.getElementById("divBtConn").style.display = 'none';
+            document.getElementById("divInfo").style.display = 'block';
+            document.getElementById("divCfgSel").style.display = 'block';
+            document.getElementById("divInputCfg").style.display = 'block';
+            initCfgSelection();
+        })
+        .catch(error => {
+            log('Argh! ' + error);
+        });
 }
 
 function selectInput() {
