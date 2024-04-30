@@ -8,6 +8,7 @@
 	import { computePosition, autoUpdate, flip, shift, offset, arrow } from '@floating-ui/dom';
 	import { storePopup } from '@skeletonlabs/skeleton';
 	import { deviceConfig, device } from '$lib/stores';
+	import type { IDeviceConfig, IGlobalConfig } from '$lib/interfaces';
 	storePopup.set({ computePosition, autoUpdate, flip, shift, offset, arrow });
 
 	const getAppVersion = async (service: BluetoothRemoteGATTService) => {
