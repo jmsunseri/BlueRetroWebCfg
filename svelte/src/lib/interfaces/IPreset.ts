@@ -1,4 +1,4 @@
-interface IPresetFile {
+export interface IPresetFile {
     name: string;
     path: string;
     sha: string;
@@ -10,7 +10,7 @@ interface IPresetFile {
     type: 'file';
 }
 
-interface IPreset {
+export interface IPreset {
     name: string;
     desc: string;
     console: string;

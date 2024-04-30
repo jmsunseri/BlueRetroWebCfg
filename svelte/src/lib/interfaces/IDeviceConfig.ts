@@ -1,11 +1,11 @@
-interface IDeviceConfig {
+export interface IDeviceConfig {
     appName?: string;
     bluetoothAddress: string;
     appVersion: string;
     globalConfig: IGlobalConfig;
 }
 
-interface IGlobalConfig {
+export interface IGlobalConfig {
     apiVersion: number;
     system: number;
     multitap: number;
