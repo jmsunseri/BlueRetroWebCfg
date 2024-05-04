@@ -5,11 +5,14 @@
 	import type { IPreset, IPresetFile } from '$lib/interfaces';
 	import { getToastStore, type ToastSettings } from '@skeletonlabs/skeleton';
 	import { writeInputConfig } from '$lib/utilities';
+	import { GameId } from '$lib/components';
 
 	const consoles: { [key: string]: IPreset[] } = {};
 	let preset: IPreset | undefined = undefined;
 	let konsole: string | undefined = undefined;
 	let output: number = 0;
+
+	let gameId: number = 0;
 
 	const toastStore = getToastStore();
 
@@ -70,7 +73,7 @@
 				toastStore.trigger(t);
 			}
 		}
-  	}
+  	};
 
 	onMount(async () => {
 		const configFiles = await getFiles();
@@ -79,6 +82,8 @@
 
 	$: saveButtonEnabled = preset;
 </script>
+
+<GameId />
 
 <label class="label">
 	<span>Output #</span>

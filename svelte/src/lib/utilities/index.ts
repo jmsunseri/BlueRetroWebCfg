@@ -1,6 +1,7 @@
 import { downloadFile } from "./downloadFile";
+import { getGameId } from "./getGameId";
 import { getGameName } from "./getGameName";
 import { getService } from "./getService";
 import { writeInputConfig } from "./writeInputConfig";
 
-export { getService, downloadFile, getGameName, writeInputConfig }
+export { getService, downloadFile, getGameName, writeInputConfig, getGameId }
