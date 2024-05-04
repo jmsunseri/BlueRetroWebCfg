@@ -203,10 +203,16 @@
 				</li>
 				<p class="font-bold pl-4 text-xl">System</p>
 				<li>
-					<a class={classesActive('/system/manage')} href="/system/manage">Manage Files</a>
+					<a class={classesActive('/system/files')} href="/system/files">Files</a>
 				</li>
 				<li>
-					<a class={classesActive('/system/update')} href="/system/update">Update Firmware</a>
+					<a class={classesActive('/system/manage')} href="/system/manage">Manage</a>
+				</li>
+				<li>
+					<a class={classesActive('/system/update')} href="/system/update">Update</a>
+				</li>
+				<li>
+					<a class={classesActive('/system/config')} href="/system/config">Configuration</a>
 				</li>
 			</ul>
 		</nav>

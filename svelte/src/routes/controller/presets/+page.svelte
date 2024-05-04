@@ -1,11 +1,17 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { maxMainInput } from '$lib/constants';
+	import { btn, maxMainInput } from '$lib/constants';
+	import { service } from '$lib/stores';
 	import type { IPreset, IPresetFile } from '$lib/interfaces';
+	import { getToastStore, type ToastSettings } from '@skeletonlabs/skeleton';
+	import { writeInputConfig } from '$lib/utilities';
 
 	const consoles: { [key: string]: IPreset[] } = {};
-	let selectedPreset: IPreset | undefined = undefined;
-	let selectedConsole: string | undefined = undefined;
+	let preset: IPreset | undefined = undefined;
+	let konsole: string | undefined = undefined;
+	let output: number = 0;
+
+	const toastStore = getToastStore();
 
 	const getFiles = async (): Promise<IPresetFile[]> => {
 		const response = await fetch(
@@ -17,24 +23,68 @@
 	const fetchMap = async (files: IPresetFile[]) => {
 		files.forEach(async (presetFile) => {
 			const response = await fetch('/config/presets/' + presetFile.name);
-			const preset: IPreset = await response.json();
-			consoles[preset.console] = [...(consoles[preset.console] || []), preset];
+			const p: IPreset = await response.json();
+			consoles[p.console] = [...(consoles[p.console] || []), p];
 		});
 	};
+
+ 
+
+	const savePresetInput = async () => {
+		const btnMap: { [key: string]: number } = btn;
+		if(preset && $service) {
+			var nbMapping = preset.map.length;
+			var cfgSize = nbMapping * 8 + 3;
+			var cfg = new Uint8Array(cfgSize);
+			var j = 0;
+			cfg[j++] = 0;
+			cfg[j++] = 0;
+			cfg[j++] = nbMapping;
+			for (var i = 0; i < nbMapping; i++) {
+				cfg[j++] = btnMap[preset.map[i][0]];
+				cfg[j++] = btnMap[preset.map[i][1]];
+				cfg[j++] = +preset.map[i][2] + output;
+				cfg[j++] = +preset.map[i][3];
+				cfg[j++] = +preset.map[i][4];
+				cfg[j++] = +preset.map[i][5];
+				cfg[j++] = +preset.map[i][6];
+				cfg[j++] =
+				+preset.map[i][7] |
+				(+preset.map[i][8] << 4);
+			}
+
+			try {
+				await writeInputConfig(output, cfg, $service);
+				const t: ToastSettings = {
+					message: 'Success updating output configuration!',
+					background: 'variant-filled-success'
+				};
+				toastStore.trigger(t);
+			} catch (error) {
+				console.log('there was an error writing your preset configuration', error);
+				const t: ToastSettings = {
+					message: 'There was an error saving ',
+					autohide: false,
+					background: 'variant-filled-error'
+				};
+				toastStore.trigger(t);
+			}
+		}
+  	}
 
 	onMount(async () => {
 		const configFiles = await getFiles();
 		await fetchMap(configFiles);
 	});
 
-	$: saveButtonEnabled = selectedPreset;
+	$: saveButtonEnabled = preset;
 </script>
 
 <label class="label">
 	<span>Output #</span>
-	<select class="select">
+	<select class="select" bind:value={output}>
 		{#each { length: maxMainInput } as _, i}
-			<option value={i + 1}>{i + 1}</option>
+			<option value={i}>{i + 1}</option>
 		{/each}
 	</select>
 </label>
@@ -43,9 +93,9 @@
 	<span>Console</span>
 	<select
 		class="select"
-		bind:value={selectedConsole}
+		bind:value={konsole}
 		on:change={() => {
-			selectedPreset = undefined;
+			preset = undefined;
 		}}
 	>
 		{#each Object.keys(consoles) as console}
@@ -56,13 +106,20 @@
 
 <label class="label">
 	<span>Preset</span>
-	<select class="select" bind:value={selectedPreset}>
-		{#if selectedConsole}
-			{#each consoles[selectedConsole] as preset}
+	<select class="select" bind:value={preset}>
+		{#if konsole}
+			{#each consoles[konsole] as preset}
 				<option value={preset}>{preset.name}</option>
 			{/each}
 		{/if}
 	</select>
 </label>
 
-<button type="button" class="btn variant-filled" disabled={!saveButtonEnabled}>Save</button>
+<button 
+	on:click={savePresetInput} 
+	type="button" 
+	class="btn variant-filled" 
+	disabled={!saveButtonEnabled || !$service}
+>
+	Save
+</button>
