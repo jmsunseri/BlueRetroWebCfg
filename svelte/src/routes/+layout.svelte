@@ -211,9 +211,6 @@
 				<li>
 					<a class={classesActive('/system/update')} href="/system/update">Update</a>
 				</li>
-				<li>
-					<a class={classesActive('/system/config')} href="/system/config">Configuration</a>
-				</li>
 			</ul>
 		</nav>
 		<!-- --- -->
