@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { maxMainInput } from '../../../../../utils/constants';
+	import { maxMainInput } from '$lib/constants';
+	import type { IPreset, IPresetFile } from '$lib/interfaces';
 
 	const consoles: { [key: string]: IPreset[] } = {};
 	let selectedPreset: IPreset | undefined = undefined;

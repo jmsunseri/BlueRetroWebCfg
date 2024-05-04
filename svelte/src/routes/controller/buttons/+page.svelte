@@ -1,23 +1,20 @@
 <script lang="ts">
-	import ButtonMapping from '$lib/components/ButtonMapping.svelte';
+	import { ButtonMapping } from '$lib/components';
 	import type { IButtonMapping } from '$lib/interfaces';
 	import { IconPlus } from '@tabler/icons-svelte';
-	import { maxMainInput, labelName as deviceLabels } from '../../../../../utils/constants';
+	import { maxMainInput, labelName as deviceLabels } from '$lib/constants';
 
 	let selectedSource: number = 0;
 	let selectedDestination: number = 0;
 	let buttonMappings: Array<IButtonMapping> = [];
 
 	const addMapping = () => {
-		buttonMappings = [
-			...buttonMappings,
-			{}
-		]
-	}
+		buttonMappings = [...buttonMappings, {}];
+	};
 
 	const removeMapping = (index: number) => {
 		buttonMappings = buttonMappings.filter((_, i) => index != i);
-	}
+	};
 </script>
 
 <div class="flex md:flex-row flex-col gap-4">
@@ -50,20 +47,20 @@
 
 {#each buttonMappings as mapping, index}
 	<ButtonMapping
-	{index}
-	onRemoveClicked={removeMapping}
-	destinationSystem={selectedDestination} 
-	sourceSystem={selectedSource} 
-	bind:max={mapping.max}
-	bind:turbo={mapping.turbo}
-	bind:scaling={mapping.scaling}
-	bind:source={mapping.source}
-	bind:destination={mapping.destination}
-	bind:diagonal={mapping.diagonal}
-	bind:destinationId={mapping.destinationId}
-	bind:deadzone={mapping.deadzone}
-	bind:threshold={mapping.threshold}
+		{index}
+		onRemoveClicked={removeMapping}
+		destinationSystem={selectedDestination}
+		sourceSystem={selectedSource}
+		bind:max={mapping.max}
+		bind:turbo={mapping.turbo}
+		bind:scaling={mapping.scaling}
+		bind:source={mapping.source}
+		bind:destination={mapping.destination}
+		bind:diagonal={mapping.diagonal}
+		bind:destinationId={mapping.destinationId}
+		bind:deadzone={mapping.deadzone}
+		bind:threshold={mapping.threshold}
 	/>
 {/each}
 
-<button class="btn btn-filled" on:click={addMapping} >Add Mapping <IconPlus /> </button>
+<button class="btn btn-filled" on:click={addMapping}>Add Mapping <IconPlus /> </button>

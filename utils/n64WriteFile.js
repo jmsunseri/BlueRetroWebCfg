@@ -1,4 +1,4 @@
-import { brUuid, pakSize } from "../utils/constants.js";
+import { brUuid, pakSize } from "../svelte/src/lib/constants.js";
 import n64WriteRecursive from "../utils/n64WriteRecursive.js";
 
 export const n64WriteFile = (brService, data, pak, setProgress, cancel) => {

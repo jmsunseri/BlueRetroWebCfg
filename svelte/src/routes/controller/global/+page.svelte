@@ -4,7 +4,7 @@
 		systemCfg as systems,
 		multitapCfg as multitaps,
 		inquiryMode as inquiryModes
-	} from '../../../../../utils/constants';
+	} from '$lib/constants';
 	let selectedSystem: number | undefined;
 	let selectedMultitap: number | undefined;
 	let selectedInquriyMode: number | undefined;

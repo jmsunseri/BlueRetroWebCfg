@@ -1,4 +1,4 @@
-import { brUuid } from "../utils/constants.js";
+import { brUuid } from "../svelte/src/lib/constants.js";
 
 export const getStringCmd = (service, command) => {
   return new Promise((resolve, reject) => {

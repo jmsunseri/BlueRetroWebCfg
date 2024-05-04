@@ -39,10 +39,12 @@
     "@types/node": "20.12.7",
     "@types/web-bluetooth": "^0.0.20",
     "vite-plugin-mkcert": "^1.17.5",
-    "@tabler/icons-svelte": "^3.2.0"
+    "@tabler/icons-svelte": "^3.2.0",
+    "@types/sql.js": "^1.4.9"
   },
   "type": "module",
   "dependencies": {
-    "@floating-ui/dom": "1.6.3"
+    "@floating-ui/dom": "1.6.3",
+    "sql.js": "^1.10.3"
   }
 }

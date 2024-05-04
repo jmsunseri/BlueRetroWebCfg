@@ -1,4 +1,4 @@
-import { brUuid, cfg_cmd_ota_abort, cfg_cmd_ota_end, cfg_cmd_ota_start } from "../utils/constants.js";
+import { brUuid, cfg_cmd_ota_abort, cfg_cmd_ota_end, cfg_cmd_ota_start } from "../svelte/src/lib/constants.js";
 import otaWriteFwRecursive from "../utils/otaWriteFwRecursive.js";
 
 export const otaWriteFirmware = (brService, data, setProgress, cancel) => {

@@ -1,4 +1,4 @@
-import { urlLatestRelease } from "../utils/constants.js";
+import { urlLatestRelease } from "../svelte/src/lib/constants.js";
 
 export const getLatestRelease = () => {
   return new Promise((resolve, reject) => {

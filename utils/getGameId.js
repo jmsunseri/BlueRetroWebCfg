@@ -1,4 +1,4 @@
-import { brUuid, cfg_cmd_get_gameid } from "../utils/constants.js";
+import { brUuid, cfg_cmd_get_gameid } from "../svelte/src/lib/constants.js";
 
 export const getGameId = (service) => {
   return new Promise((resolve, reject) => {

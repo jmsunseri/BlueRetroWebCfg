@@ -1,8 +1,11 @@
+import type { IBlueRetroFile } from "./IBlueRetroFile";
+
 export interface IDeviceConfig {
     appName?: string;
-    bluetoothAddress: string;
-    appVersion: string;
-    globalConfig: IGlobalConfig;
+    bluetoothAddress?: string;
+    appVersion?: string;
+    globalConfig?: IGlobalConfig;
+    files?: IBlueRetroFile[];
 }
 
 export interface IGlobalConfig {

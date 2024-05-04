@@ -1,6 +1,6 @@
 // Base on https://www.html5rocks.com/en/tutorials/file/dndfiles//
 
-import { brUuid, pakSize } from './utils/constants.js';
+import { brUuid, pakSize } from './svelte/src/lib/constants.js';
 import { downloadFile } from './utils/downloadFile.js';
 import { getLatestRelease } from './utils/getLatestRelease.js';
 import { getAppVersion } from './utils/getAppVersion.js';
@@ -24,7 +24,7 @@ export function abortFileTransfer() {
 }
 
 function errorHandler(evt) {
-    switch(evt.target.error.code) {
+    switch (evt.target.error.code) {
         case evt.target.error.NOT_FOUND_ERR:
             log('File Not Found!');
             break;
@@ -49,22 +49,22 @@ export function pakRead(evt) {
     progress.textContent = '0%';
 
     readFile()
-    .then(value => {
-        downloadFile(new Blob([value.buffer], {type: "application/mpk"}),
-            'ctrl_pak' + eval(Number(document.getElementById("pakSelect").value) + 1) + '.mpk');
-        document.getElementById("divBtConn").style.display = 'none';
-        document.getElementById("divInfo").style.display = 'block';
-        document.getElementById("divFileSelect").style.display = 'block';
-        document.getElementById("divFileTransfer").style.display = 'none';
-    })
-    .catch(error => {
-        log('Argh! ' + error);
-        document.getElementById("divBtConn").style.display = 'none';
-        document.getElementById("divInfo").style.display = 'block';
-        document.getElementById("divFileSelect").style.display = 'block';
-        document.getElementById("divFileTransfer").style.display = 'none';
-        cancel = 0;
-    });
+        .then(value => {
+            downloadFile(new Blob([value.buffer], { type: "application/mpk" }),
+                'ctrl_pak' + eval(Number(document.getElementById("pakSelect").value) + 1) + '.mpk');
+            document.getElementById("divBtConn").style.display = 'none';
+            document.getElementById("divInfo").style.display = 'block';
+            document.getElementById("divFileSelect").style.display = 'block';
+            document.getElementById("divFileTransfer").style.display = 'none';
+        })
+        .catch(error => {
+            log('Argh! ' + error);
+            document.getElementById("divBtConn").style.display = 'none';
+            document.getElementById("divInfo").style.display = 'block';
+            document.getElementById("divFileSelect").style.display = 'block';
+            document.getElementById("divFileTransfer").style.display = 'none';
+            cancel = 0;
+        });
 }
 
 export function pakWrite(evt) {
@@ -74,10 +74,10 @@ export function pakWrite(evt) {
 
     reader = new FileReader();
     reader.onerror = errorHandler;
-    reader.onabort = function(e) {
+    reader.onabort = function (e) {
         log('File read cancelled');
     };
-    reader.onload = function(e) {
+    reader.onload = function (e) {
         writeFile(reader.result.slice(0, pakSize));
     }
 
@@ -90,7 +90,7 @@ export function pakFormat(evt) {
 }
 
 function readFile() {
-    return new Promise(function(resolve, reject) {
+    return new Promise(function (resolve, reject) {
         let pak = Number(document.getElementById("pakSelect").value);
         document.getElementById('progress_bar').className = 'loading';
         document.getElementById("divBtConn").style.display = 'none';
@@ -98,12 +98,12 @@ function readFile() {
         document.getElementById("divFileSelect").style.display = 'none';
         document.getElementById("divFileTransfer").style.display = 'block';
         n64ReadFile(brService, pak, setProgress, cancel)
-        .then(data => {
-            resolve(data);
-        })
-        .catch(error => {
-            reject(error);
-        });
+            .then(data => {
+                resolve(data);
+            })
+            .catch(error => {
+                reject(error);
+            });
     });
 }
 
@@ -115,20 +115,20 @@ function writeFile(data) {
     document.getElementById("divFileSelect").style.display = 'none';
     document.getElementById("divFileTransfer").style.display = 'block';
     n64WriteFile(brService, data, pak, setProgress, cancel)
-    .then(_ => {
-        document.getElementById("divBtConn").style.display = 'none';
-        document.getElementById("divInfo").style.display = 'block';
-        document.getElementById("divFileSelect").style.display = 'block';
-        document.getElementById("divFileTransfer").style.display = 'none';
-    })
-    .catch(error => {
-        log('Argh! ' + error);
-        document.getElementById("divBtConn").style.display = 'none';
-        document.getElementById("divInfo").style.display = 'block';
-        document.getElementById("divFileSelect").style.display = 'block';
-        document.getElementById("divFileTransfer").style.display = 'none';
-        cancel = 0;
-    });
+        .then(_ => {
+            document.getElementById("divBtConn").style.display = 'none';
+            document.getElementById("divInfo").style.display = 'block';
+            document.getElementById("divFileSelect").style.display = 'block';
+            document.getElementById("divFileTransfer").style.display = 'none';
+        })
+        .catch(error => {
+            log('Argh! ' + error);
+            document.getElementById("divBtConn").style.display = 'none';
+            document.getElementById("divInfo").style.display = 'block';
+            document.getElementById("divFileSelect").style.display = 'block';
+            document.getElementById("divFileTransfer").style.display = 'none';
+            cancel = 0;
+        });
 }
 
 function onDisconnected() {
@@ -143,60 +143,62 @@ function onDisconnected() {
 export function btConn() {
     log('Requesting Bluetooth Device...');
     navigator.bluetooth.requestDevice(
-        {filters: [{namePrefix: 'BlueRetro'}],
-        optionalServices: [brUuid[0]]})
-    .then(device => {
-        log('Connecting to GATT Server...');
-        name = device.name;
-        bluetoothDevice = device;
-        bluetoothDevice.addEventListener('gattserverdisconnected', onDisconnected);
-        return bluetoothDevice.gatt.connect();
-    })
-    .then(server => {
-        log('Getting BlueRetro Service...');
-        return server.getPrimaryService(brUuid[0]);
-    })
-    .catch(error => {
-        log(error.name);
-        throw 'Couldn\'t connect to BlueRetro';
-    })
-    .then(service => {
-        brService = service;
-        return getBdAddr(brService);
-    })
-    .then(value => {
-        bdaddr = value;
-        return getLatestRelease();
-    })
-    .then(value => {
-        latest_ver = value
-        return getAppVersion(brService);
-    })
-    .catch(error => {
-        if (error.name == 'NotFoundError'
-          || error.name == 'NotSupportedError') {
-            return '';
-        }
-        throw error;
-    })
-    .then(value => {
-        app_ver = value;
-        document.getElementById("divInfo").innerHTML = 'Connected to: ' + name + ' (' + bdaddr + ') [' + app_ver + ']';
-        try {
-            if (app_ver.indexOf(latest_ver) == -1) {
-                document.getElementById("divInfo").innerHTML += '<br><br>Download latest FW ' + latest_ver + ' from <a href=\'https://darthcloud.itch.io/blueretro\'>itch.io</a>';
+        {
+            filters: [{ namePrefix: 'BlueRetro' }],
+            optionalServices: [brUuid[0]]
+        })
+        .then(device => {
+            log('Connecting to GATT Server...');
+            name = device.name;
+            bluetoothDevice = device;
+            bluetoothDevice.addEventListener('gattserverdisconnected', onDisconnected);
+            return bluetoothDevice.gatt.connect();
+        })
+        .then(server => {
+            log('Getting BlueRetro Service...');
+            return server.getPrimaryService(brUuid[0]);
+        })
+        .catch(error => {
+            log(error.name);
+            throw 'Couldn\'t connect to BlueRetro';
+        })
+        .then(service => {
+            brService = service;
+            return getBdAddr(brService);
+        })
+        .then(value => {
+            bdaddr = value;
+            return getLatestRelease();
+        })
+        .then(value => {
+            latest_ver = value
+            return getAppVersion(brService);
+        })
+        .catch(error => {
+            if (error.name == 'NotFoundError'
+                || error.name == 'NotSupportedError') {
+                return '';
             }
-        }
-        catch (e) {
-            // Just move on
-        }
-        log('Init Cfg DOM...');
-        document.getElementById("divBtConn").style.display = 'none';
-        document.getElementById("divInfo").style.display = 'block';
-        document.getElementById("divFileSelect").style.display = 'block';
-        document.getElementById("divFileTransfer").style.display = 'none';
-    })
-    .catch(error => {
-        log('Argh! ' + error);
-    });
+            throw error;
+        })
+        .then(value => {
+            app_ver = value;
+            document.getElementById("divInfo").innerHTML = 'Connected to: ' + name + ' (' + bdaddr + ') [' + app_ver + ']';
+            try {
+                if (app_ver.indexOf(latest_ver) == -1) {
+                    document.getElementById("divInfo").innerHTML += '<br><br>Download latest FW ' + latest_ver + ' from <a href=\'https://darthcloud.itch.io/blueretro\'>itch.io</a>';
+                }
+            }
+            catch (e) {
+                // Just move on
+            }
+            log('Init Cfg DOM...');
+            document.getElementById("divBtConn").style.display = 'none';
+            document.getElementById("divInfo").style.display = 'block';
+            document.getElementById("divFileSelect").style.display = 'block';
+            document.getElementById("divFileTransfer").style.display = 'none';
+        })
+        .catch(error => {
+            log('Argh! ' + error);
+        });
 }

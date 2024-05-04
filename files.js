@@ -19,46 +19,46 @@ function deleteFileCmd(filename) {
     return new Promise((resolve, reject) => {
         var cmd = new Uint8Array(1);
         brService.getCharacteristic(brUuid[7])
-        .then((chrc) => {
-            cmd[0] = cfg_cmd_del_file;
-            let enc = new TextEncoder();
-            let file = enc.encode(filename);
-            let combined = new Uint8Array([
-                ...cmd,
-                ...file,
-            ]);
-            return chrc.writeValue(combined);
-        })
-        .then((_) => {
-            resolve();
-        })
-        .catch((error) => {
-            reject(error);
-        });
+            .then((chrc) => {
+                cmd[0] = cfg_cmd_del_file;
+                let enc = new TextEncoder();
+                let file = enc.encode(filename);
+                let combined = new Uint8Array([
+                    ...cmd,
+                    ...file,
+                ]);
+                return chrc.writeValue(combined);
+            })
+            .then((_) => {
+                resolve();
+            })
+            .catch((error) => {
+                reject(error);
+            });
     });
 }
 
 function readFileRecursive(chrc) {
     return new Promise(function (resolve, reject) {
-      chrc.readValue()
-        .then((value) => {
-          if (value.byteLength > 0) {
-            let enc = new TextDecoder("utf-8");
-            let filename = enc.decode(value);
-            fileList.push(filename);
-            getGameName(filename)
-              .then((gamename) => {
-                gidList.push(gamename);
-                resolve(readFileRecursive(chrc));
-              });
-          }
-          else {
-            resolve();
-          }
-        })
-        .catch((error) => {
-          reject(error);
-        });
+        chrc.readValue()
+            .then((value) => {
+                if (value.byteLength > 0) {
+                    let enc = new TextDecoder("utf-8");
+                    let filename = enc.decode(value);
+                    fileList.push(filename);
+                    getGameName(filename)
+                        .then((gamename) => {
+                            gidList.push(gamename);
+                            resolve(readFileRecursive(chrc));
+                        });
+                }
+                else {
+                    resolve();
+                }
+            })
+            .catch((error) => {
+                reject(error);
+            });
     });
 };
 
@@ -67,28 +67,28 @@ function getFiles() {
         var cmd = new Uint8Array(1);
         var cmd_chrc;
         brService.getCharacteristic(brUuid[7])
-        .then((chrc) => {
-            cmd_chrc = chrc;
-            cmd[0] = cfg_cmd_open_dir;
-            return cmd_chrc.writeValue(cmd);
-        })
-        .then((_) => {
-            cmd[0] = cfg_cmd_get_file;
-            return cmd_chrc.writeValue(cmd);
-        })
-        .then((_) => {
-            return readFileRecursive(cmd_chrc);
-        })
-        .then((_) => {
-            cmd[0] = cfg_cmd_close_dir;
-            return cmd_chrc.writeValue(cmd);
-        })
-        .then((_) => {
-            resolve();
-        })
-        .catch((error) => {
-            reject(error);
-        });
+            .then((chrc) => {
+                cmd_chrc = chrc;
+                cmd[0] = cfg_cmd_open_dir;
+                return cmd_chrc.writeValue(cmd);
+            })
+            .then((_) => {
+                cmd[0] = cfg_cmd_get_file;
+                return cmd_chrc.writeValue(cmd);
+            })
+            .then((_) => {
+                return readFileRecursive(cmd_chrc);
+            })
+            .then((_) => {
+                cmd[0] = cfg_cmd_close_dir;
+                return cmd_chrc.writeValue(cmd);
+            })
+            .then((_) => {
+                resolve();
+            })
+            .catch((error) => {
+                reject(error);
+            });
     });
 }
 
@@ -146,65 +146,67 @@ export function setFactoryResetEvent() {
 export function btConn() {
     log('Requesting Bluetooth Device...');
     navigator.bluetooth.requestDevice(
-        {filters: [{namePrefix: 'BlueRetro'}],
-        optionalServices: [brUuid[0]]})
-    .then(device => {
-        log('Connecting to GATT Server...');
-        log('Device name: ' + device.name);
-        log('Device id: ' + device.id);
-        name = device.name;
-        bluetoothDevice = device;
-        bluetoothDevice.addEventListener('gattserverdisconnected', onDisconnected);
-        return bluetoothDevice.gatt.connect();
-    })
-    .then(server => {
-        log('Getting BlueRetro Service...');
-        return server.getPrimaryService(brUuid[0]);
-    })
-    .catch(error => {
-        log(error.name);
-        throw 'Couldn\'t connect to BlueRetro';
-    })
-    .then(service => {
-        brService = service;
-        return getBdAddr(brService);
-    })
-    .then(value => {
-        bdaddr = value;
-        return getLatestRelease();
-    })
-    .then(value => {
-        latest_ver = value;
-        return getAppVersion(brService);
-    })
-    .catch(error => {
-        if (error.name == 'NotFoundError'
-          || error.name == 'NotSupportedError') {
-            return '';
-        }
-        throw error;
-    })
-    .then(value => {
-        app_ver = value;
-        return getFiles();
-    })
-    .then(_ => {
-        initFile();
-        document.getElementById("divInfo").innerHTML = 'Connected to: ' + name + ' (' + bdaddr + ') [' + app_ver + ']';
-        try {
-            if (app_ver.indexOf(latest_ver) == -1) {
-                document.getElementById("divInfo").innerHTML += '<br><br>Download latest FW ' + latest_ver + ' from <a href=\'https://darthcloud.itch.io/blueretro\'>itch.io</a>';
+        {
+            filters: [{ namePrefix: 'BlueRetro' }],
+            optionalServices: [brUuid[0]]
+        })
+        .then(device => {
+            log('Connecting to GATT Server...');
+            log('Device name: ' + device.name);
+            log('Device id: ' + device.id);
+            name = device.name;
+            bluetoothDevice = device;
+            bluetoothDevice.addEventListener('gattserverdisconnected', onDisconnected);
+            return bluetoothDevice.gatt.connect();
+        })
+        .then(server => {
+            log('Getting BlueRetro Service...');
+            return server.getPrimaryService(brUuid[0]);
+        })
+        .catch(error => {
+            log(error.name);
+            throw 'Couldn\'t connect to BlueRetro';
+        })
+        .then(service => {
+            brService = service;
+            return getBdAddr(brService);
+        })
+        .then(value => {
+            bdaddr = value;
+            return getLatestRelease();
+        })
+        .then(value => {
+            latest_ver = value;
+            return getAppVersion(brService);
+        })
+        .catch(error => {
+            if (error.name == 'NotFoundError'
+                || error.name == 'NotSupportedError') {
+                return '';
             }
-        }
-        catch (e) {
-            // Just move on
-        }
-        log('Init Cfg DOM...');
-        document.getElementById("divBtConn").style.display = 'none';
-        document.getElementById("divInfo").style.display = 'block';
-        document.getElementById("divFile").style.display = 'block';
-    })
-    .catch(error => {
-        log('Argh! ' + error);
-    });
+            throw error;
+        })
+        .then(value => {
+            app_ver = value;
+            return getFiles();
+        })
+        .then(_ => {
+            initFile();
+            document.getElementById("divInfo").innerHTML = 'Connected to: ' + name + ' (' + bdaddr + ') [' + app_ver + ']';
+            try {
+                if (app_ver.indexOf(latest_ver) == -1) {
+                    document.getElementById("divInfo").innerHTML += '<br><br>Download latest FW ' + latest_ver + ' from <a href=\'https://darthcloud.itch.io/blueretro\'>itch.io</a>';
+                }
+            }
+            catch (e) {
+                // Just move on
+            }
+            log('Init Cfg DOM...');
+            document.getElementById("divBtConn").style.display = 'none';
+            document.getElementById("divInfo").style.display = 'block';
+            document.getElementById("divFile").style.display = 'block';
+        })
+        .catch(error => {
+            log('Argh! ' + error);
+        });
 }

@@ -1,4 +1,4 @@
-import { brUuid } from "../utils/constants.js";
+import { brUuid } from "../svelte/src/lib/constants.js";
 
 export const getBdAddr = (service) => {
   return new Promise((resolve, reject) => {
@@ -9,11 +9,11 @@ export const getBdAddr = (service) => {
       })
       .then((value) => {
         let bdaddr = value.getUint8(5).toString(16).padStart(2, '0') + ':'
-                + value.getUint8(4).toString(16).padStart(2, '0') + ':'
-                + value.getUint8(3).toString(16).padStart(2, '0') + ':'
-                + value.getUint8(2).toString(16).padStart(2, '0') + ':'
-                + value.getUint8(1).toString(16).padStart(2, '0') + ':'
-                + value.getUint8(0).toString(16).padStart(2, '0');
+          + value.getUint8(4).toString(16).padStart(2, '0') + ':'
+          + value.getUint8(3).toString(16).padStart(2, '0') + ':'
+          + value.getUint8(2).toString(16).padStart(2, '0') + ':'
+          + value.getUint8(1).toString(16).padStart(2, '0') + ':'
+          + value.getUint8(0).toString(16).padStart(2, '0');
         resolve(bdaddr);
       })
       .catch((error) => {

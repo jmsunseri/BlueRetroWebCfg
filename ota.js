@@ -1,6 +1,6 @@
 // Base on https://www.html5rocks.com/en/tutorials/file/dndfiles//
 
-import { brUuid, cfg_cmd_get_fw_name, cfg_cmd_get_fw_ver } from './utils/constants.js';
+import { brUuid, cfg_cmd_get_fw_name, cfg_cmd_get_fw_ver } from './svelte/src/lib/constants.js';
 import { getLatestRelease } from './utils/getLatestRelease.js';
 import { getStringCmd } from './utils/getStringCmd.js';
 import { getAppVersion } from './utils/getAppVersion.js';
@@ -29,7 +29,7 @@ function setProgress(percent) {
 }
 
 function errorHandler(evt) {
-    switch(evt.target.error.code) {
+    switch (evt.target.error.code) {
         case evt.target.error.NOT_FOUND_ERR:
             log('File Not Found!');
             break;
@@ -59,10 +59,10 @@ export function firmwareUpdate(evt) {
 
     reader = new FileReader();
     reader.onerror = errorHandler;
-    reader.onabort = function(e) {
+    reader.onabort = function (e) {
         log('File read cancelled');
     };
-    reader.onload = function(e) {
+    reader.onload = function (e) {
         var decoder = new TextDecoder("utf-8");
         var header = decoder.decode(reader.result.slice(0, 256));
         let new_fw_is_hw2 = (header.indexOf('hw2') != -1);
@@ -96,13 +96,13 @@ function writeFirmware(data) {
     document.getElementById("divFwSelect").style.display = 'none';
     document.getElementById("divFwUpdate").style.display = 'block';
     otaWriteFirmware(brService, data, setProgress, cancel)
-    .catch(error => {
-        log('Argh! ' + error);
-        document.getElementById("divBtConn").style.display = 'none';
-        document.getElementById("divInfo").style.display = 'block';
-        document.getElementById("divFwSelect").style.display = 'block';
-        document.getElementById("divFwUpdate").style.display = 'none';
-    });
+        .catch(error => {
+            log('Argh! ' + error);
+            document.getElementById("divBtConn").style.display = 'none';
+            document.getElementById("divInfo").style.display = 'block';
+            document.getElementById("divFwSelect").style.display = 'block';
+            document.getElementById("divFwUpdate").style.display = 'none';
+        });
 }
 
 function onDisconnected() {
@@ -117,78 +117,80 @@ function onDisconnected() {
 export function btConn() {
     log('Requesting Bluetooth Device...');
     navigator.bluetooth.requestDevice(
-        {filters: [{namePrefix: 'BlueRetro'}],
-        optionalServices: [brUuid[0]]})
-    .then(device => {
-        log('Connecting to GATT Server...');
-        name = device.name;
-        bluetoothDevice = device;
-        bluetoothDevice.addEventListener('gattserverdisconnected', onDisconnected);
-        return bluetoothDevice.gatt.connect();
-    })
-    .then(server => {
-        log('Getting BlueRetro Service...');
-        return server.getPrimaryService(brUuid[0]);
-    })
-    .catch(error => {
-        log(error.name);
-        throw 'Couldn\'t connect to BlueRetro';
-    })
-    .then(service => {
-        brService = service;
-        return getBdAddr(brService);
-    })
-    .then(value => {
-        bdaddr = value;
-        return getLatestRelease();
-    })
-    .then(value => {
-        latest_ver = value;
-        return getAppVersion(brService);
-    })
-    .then(value => {
-        app_ver = value;
-        let app_ver_is_18x = (app_ver.indexOf('v1.8') != -1);
-        let app_ver_bogus = (app_ver.indexOf('v') == -1);
-        if (app_ver_is_18x || app_ver_bogus) {
-            return '';
-        }
-        else {
-            return getStringCmd(brService, cfg_cmd_get_fw_name);
-        }
-    })
-    .catch(error => {
-        if (error.name == 'NotFoundError'
-          || error.name == 'NotSupportedError') {
-            return '';
-        }
-        throw error;
-    })
-    .then(value => {
-        app_name = value;
-        document.getElementById("divInfo").innerHTML = 'Connected to: ' + name + ' (' + bdaddr + ') [' + app_ver + ']';
-        try {
-            if (app_ver.indexOf(latest_ver) == -1) {
-                document.getElementById("divInfo").innerHTML += '<br><br>Download latest FW ' + latest_ver + ' from <a href=\'https://darthcloud.itch.io/blueretro\'>itch.io</a>';
+        {
+            filters: [{ namePrefix: 'BlueRetro' }],
+            optionalServices: [brUuid[0]]
+        })
+        .then(device => {
+            log('Connecting to GATT Server...');
+            name = device.name;
+            bluetoothDevice = device;
+            bluetoothDevice.addEventListener('gattserverdisconnected', onDisconnected);
+            return bluetoothDevice.gatt.connect();
+        })
+        .then(server => {
+            log('Getting BlueRetro Service...');
+            return server.getPrimaryService(brUuid[0]);
+        })
+        .catch(error => {
+            log(error.name);
+            throw 'Couldn\'t connect to BlueRetro';
+        })
+        .then(service => {
+            brService = service;
+            return getBdAddr(brService);
+        })
+        .then(value => {
+            bdaddr = value;
+            return getLatestRelease();
+        })
+        .then(value => {
+            latest_ver = value;
+            return getAppVersion(brService);
+        })
+        .then(value => {
+            app_ver = value;
+            let app_ver_is_18x = (app_ver.indexOf('v1.8') != -1);
+            let app_ver_bogus = (app_ver.indexOf('v') == -1);
+            if (app_ver_is_18x || app_ver_bogus) {
+                return '';
             }
-        }
-        catch (e) {
-            // Just move on
-        }
-        cur_fw_is_hw2 = 0;
-        let app_ver_is_hw2 = (app_ver.indexOf('hw2') != -1);
-        let app_name_is_hw2 = (app_name.indexOf('hw2') != -1);
-        log("app_ver_is_hw2: " + app_ver_is_hw2 + " app_name_is_hw2: " + app_name_is_hw2);
-        if (app_ver_is_hw2 || app_name_is_hw2) {
-            cur_fw_is_hw2 = 1;
-        }
-        log('Init Cfg DOM...');
-        document.getElementById("divBtConn").style.display = 'none';
-        document.getElementById("divInfo").style.display = 'block';
-        document.getElementById("divFwSelect").style.display = 'block';
-        document.getElementById("divFwUpdate").style.display = 'none';
-    })
-    .catch(error => {
-        log('Argh! ' + error);
-    });
+            else {
+                return getStringCmd(brService, cfg_cmd_get_fw_name);
+            }
+        })
+        .catch(error => {
+            if (error.name == 'NotFoundError'
+                || error.name == 'NotSupportedError') {
+                return '';
+            }
+            throw error;
+        })
+        .then(value => {
+            app_name = value;
+            document.getElementById("divInfo").innerHTML = 'Connected to: ' + name + ' (' + bdaddr + ') [' + app_ver + ']';
+            try {
+                if (app_ver.indexOf(latest_ver) == -1) {
+                    document.getElementById("divInfo").innerHTML += '<br><br>Download latest FW ' + latest_ver + ' from <a href=\'https://darthcloud.itch.io/blueretro\'>itch.io</a>';
+                }
+            }
+            catch (e) {
+                // Just move on
+            }
+            cur_fw_is_hw2 = 0;
+            let app_ver_is_hw2 = (app_ver.indexOf('hw2') != -1);
+            let app_name_is_hw2 = (app_name.indexOf('hw2') != -1);
+            log("app_ver_is_hw2: " + app_ver_is_hw2 + " app_name_is_hw2: " + app_name_is_hw2);
+            if (app_ver_is_hw2 || app_name_is_hw2) {
+                cur_fw_is_hw2 = 1;
+            }
+            log('Init Cfg DOM...');
+            document.getElementById("divBtConn").style.display = 'none';
+            document.getElementById("divInfo").style.display = 'block';
+            document.getElementById("divFwSelect").style.display = 'block';
+            document.getElementById("divFwUpdate").style.display = 'none';
+        })
+        .catch(error => {
+            log('Argh! ' + error);
+        });
 }
