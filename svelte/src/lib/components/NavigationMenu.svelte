@@ -29,24 +29,30 @@
 			>
 		</li>
 		<li>
-			<a
-				on:click={onItemSelect}
-				class={classesActive('/controller/buttons')}
-				href="/controller/buttons">Button Mappings</a
-			>
-		</li>
-		<li>
-			<a
-				on:click={onItemSelect}
-				class={classesActive('/controller/presets')}
-				href="/controller/presets">Presets</a
-			>
-		</li>
-		<li>
 			<a on:click={onItemSelect} class={classesActive('/controller/n64')} href="/controller/n64"
 				>N64 Controller Pack</a
 			>
 		</li>
+		<li>
+			<p class="font-bold pl-4">Button Mappings</p>
+			<ul class="pl-4">
+				<li>
+					<a
+						on:click={onItemSelect}
+						class={classesActive('/controller/presets')}
+						href="/controller/presets">Presets</a
+					>
+				</li>
+				<li>
+					<a
+						on:click={onItemSelect}
+						class={classesActive('/controller/buttons')}
+						href="/controller/buttons">Custom</a
+					>
+				</li>
+			</ul>
+		</li>
+
 		<p class="font-bold pl-4 text-xl">System</p>
 		<li>
 			<a on:click={onItemSelect} class={classesActive('/system/files')} href="/system/files"
