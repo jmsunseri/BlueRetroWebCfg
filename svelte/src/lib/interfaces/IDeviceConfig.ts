@@ -6,6 +6,7 @@ export interface IDeviceConfig {
     appVersion?: string;
     globalConfig?: IGlobalConfig;
     files?: IBlueRetroFile[];
+    source?: ControllerConfigType;
 }
 
 export interface IGlobalConfig {
