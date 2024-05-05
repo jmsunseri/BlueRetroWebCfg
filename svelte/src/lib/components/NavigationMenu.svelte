@@ -49,13 +49,18 @@
 		</li>
 		<p class="font-bold pl-4 text-xl">System</p>
 		<li>
+			<a on:click={onItemSelect} class={classesActive('/system/files')} href="/system/files"
+				>Files</a
+			>
+		</li>
+		<li>
 			<a on:click={onItemSelect} class={classesActive('/system/manage')} href="/system/manage"
-				>Manage Files</a
+				>Manage</a
 			>
 		</li>
 		<li>
 			<a on:click={onItemSelect} class={classesActive('/system/update')} href="/system/update"
-				>Update Firmware</a
+				>Update</a
 			>
 		</li>
 	</ul>
