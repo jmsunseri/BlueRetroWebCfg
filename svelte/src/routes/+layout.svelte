@@ -1,21 +1,28 @@
 <script lang="ts">
 	import '../app.postcss';
-	import { AppShell, AppBar, ProgressRadial, Toast } from '@skeletonlabs/skeleton';
-	import { IconBrandGithub, IconBrandDiscord, IconX } from '@tabler/icons-svelte';
+	import {
+		AppShell,
+		AppBar,
+		ProgressRadial,
+		Drawer,
+		Toast,
+		storePopup,
+		initializeStores,
+		getDrawerStore
+	} from '@skeletonlabs/skeleton';
+	import { IconBrandGithub, IconBrandDiscord, IconX, IconMenu2 } from '@tabler/icons-svelte';
 	import { brUuid, cfg_cmd_get_fw_name } from '$lib/constants';
 	import { deviceConfig, device, service } from '$lib/stores';
-	import type { IDeviceConfig, IGlobalConfig } from '$lib/interfaces';
+	import { NavigationMenu } from '$lib/components';
+	import type { IDeviceConfig } from '$lib/interfaces';
 	import { getService } from '$lib/utilities';
 
 	// Floating UI for Popups
 	import { computePosition, autoUpdate, flip, shift, offset, arrow } from '@floating-ui/dom';
-	import { storePopup } from '@skeletonlabs/skeleton';
 	storePopup.set({ computePosition, autoUpdate, flip, shift, offset, arrow });
 
-	import { initializeStores } from '@skeletonlabs/skeleton';
-	import { page } from '$app/stores';
-
 	initializeStores();
+	const drawerStore = getDrawerStore();
 
 	const getAppVersion = async (service: BluetoothRemoteGATTService) => {
 		const charactristics = await service.getCharacteristic(brUuid[9]);
@@ -145,19 +152,26 @@
 		}
 	};
 
-	$: classesActive = (href: string) =>
-		href === $page.url.pathname ? '!variant-filled-primary' : '';
+	const onMenuClick = () => {
+		drawerStore.open({});
+	};
 </script>
 
+<Drawer>
+	<NavigationMenu />
+</Drawer>
 <!-- App Shell -->
-<AppShell slotSidebarLeft="bg-surface-500/5 w-56 p-4">
+<AppShell slotSidebarLeft="bg-surface-500/5 md:w-56 w-0 md:p-4">
 	<svelte:fragment slot="header">
 		<!-- App Bar -->
-		<AppBar background="bg-surface-700">
+		<AppBar background="bg-surface-700" padding="p-2 md:p-4">
 			<svelte:fragment slot="lead">
 				<div class="flex flex-row gap-4 items-center">
-					<img src="/icon.png" alt="blueretro icon" class="h-12" />
-					<strong class="text-xl text-white">BlueRetro Web Configuration</strong>
+					<img src="/icon.png" alt="blueretro icon" class="h-12 pl-2 hidden md:flex" />
+					<button class="btn btn-icon md:hidden text-white" on:click={onMenuClick}>
+						<IconMenu2 />
+					</button>
+					<strong class="text-xl text-white">BlueRetro</strong>
 				</div>
 			</svelte:fragment>
 			<svelte:fragment slot="trail">
@@ -184,33 +198,7 @@
 	</svelte:fragment>
 
 	<svelte:fragment slot="sidebarLeft">
-		<!-- Insert the list: -->
-		<nav class="list-nav">
-			<ul>
-				<p class="font-bold pl-4 text-xl">Controller</p>
-				<li><a class={classesActive('/controller/global')} href="/controller/global">Global</a></li>
-				<li><a class={classesActive('/controller/output')} href="/controller/output">Output</a></li>
-				<li>
-					<a class={classesActive('/controller/buttons')} href="/controller/buttons"
-						>Button Mappings</a
-					>
-				</li>
-				<li>
-					<a class={classesActive('/controller/presets')} href="/controller/presets">Presets</a>
-				</li>
-				<li>
-					<a class={classesActive('/controller/n64')} href="/controller/n64">N64 Controller Pack</a>
-				</li>
-				<p class="font-bold pl-4 text-xl">System</p>
-				<li>
-					<a class={classesActive('/system/manage')} href="/system/manage">Manage Files</a>
-				</li>
-				<li>
-					<a class={classesActive('/system/update')} href="/system/update">Update Firmware</a>
-				</li>
-			</ul>
-		</nav>
-		<!-- --- -->
+		<NavigationMenu />
 	</svelte:fragment>
 	<div class="p-4 flex gap-4 flex md:flex-row flex-col max-w-screen-md">
 		<div class="flex flex-col gap-4 flex-1">
