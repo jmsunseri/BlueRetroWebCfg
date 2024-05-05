@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ButtonMapping } from '$lib/components';
+	import { ButtonMapping, GameId } from '$lib/components';
 	import type { IButtonMapping } from '$lib/interfaces';
 	import { IconPlus } from '@tabler/icons-svelte';
 	import { maxMainInput, labelName as deviceLabels } from '$lib/constants';
@@ -7,6 +7,7 @@
 	let selectedSource: number = 0;
 	let selectedDestination: number = 0;
 	let buttonMappings: Array<IButtonMapping> = [];
+	let gameId = 0;
 
 	const addMapping = () => {
 		buttonMappings = [...buttonMappings, {}];
@@ -16,6 +17,8 @@
 		buttonMappings = buttonMappings.filter((_, i) => index != i);
 	};
 </script>
+
+<GameId  />
 
 <div class="flex md:flex-row flex-col gap-4">
 	<label class="label">

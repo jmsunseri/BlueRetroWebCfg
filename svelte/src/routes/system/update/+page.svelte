@@ -113,9 +113,14 @@
 				// Read in the image file as a binary string.
 				reader.readAsArrayBuffer(files[0]);
 			} catch {
+				const t: ToastSettings = {
+					message: 'There was an error updating the firmware!',
+					autohide: false,
+					background: 'variant-filled-error'
+				};
+				toastStore.trigger(t);
 				isDoingSomething = false;
 				progress = 0;
-				$device.gatt?.disconnect();
 			}
 		}
 	};
