@@ -11,6 +11,14 @@
 
 	let isLoadingConfig = false;
 
+	const getOutputConfig = async (service: BluetoothRemoteGATTService) => {
+		// const charOne = await service.getCharacteristic(brUuid[2]);
+		// console.log('charOne', await charOne.readValue());
+
+		const charTwo = await service.getCharacteristic(brUuid[3]);
+		console.log('charTwo', await charTwo.readValue());
+	};
+
 	const loadOutputConfig = async (s: BluetoothRemoteGATTService, configId: number) => {
 		let chrc = await s.getCharacteristic(brUuid[2]);
 		var outputCtrl = new Uint16Array([configId]);

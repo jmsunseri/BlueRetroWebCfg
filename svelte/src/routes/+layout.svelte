@@ -61,41 +61,6 @@
 		return address;
 	};
 
-	const getApiVersion = async (service: BluetoothRemoteGATTService) => {
-		console.log('Reading Api version...');
-		const characteristics = await service.getCharacteristic(brUuid[6]);
-		const dataview = await characteristics.readValue();
-		return dataview.getUint8(0);
-	};
-
-	// const getGlobalConfig = async (service: BluetoothRemoteGATTService) => {
-	// 	const charactristic = await service.getCharacteristic(brUuid[1]);
-	// 	const dataview = await charactristic.readValue();
-
-	// 	const globalConfig: IGlobalConfig = {
-	// 		apiVersion: await getApiVersion(service),
-	// 		system: dataview.getUint8(0),
-	// 		multitap: dataview.getUint8(1)
-	// 	};
-
-	// 	if (globalConfig.apiVersion > 0) {
-	// 		globalConfig.inquiryMode = dataview.getUint8(2);
-	// 	}
-	// 	if (globalConfig.apiVersion > 1) {
-	// 		globalConfig.bank = dataview.getUint8(3);
-	// 	}
-
-	// 	return globalConfig;
-	// };
-
-	// const getOutputConfig = async (service: BluetoothRemoteGATTService) => {
-	// 	// const charOne = await service.getCharacteristic(brUuid[2]);
-	// 	// console.log('charOne', await charOne.readValue());
-
-	// 	const charTwo = await service.getCharacteristic(brUuid[3]);
-	// 	console.log('charTwo', await charTwo.readValue());
-	// };
-
 	const unselectDevice = () => {
 		device.set(undefined);
 		deviceConfig.set(undefined);
