@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { FileButton } from '@skeletonlabs/skeleton';
+	import { FileButton, getToastStore, type ToastSettings } from '@skeletonlabs/skeleton';
 	import { block, brUuid, mtu, pakSize } from '$lib/constants';
-	import { downloadFile, getService } from '$lib/utilities';
-	import { device } from '$lib/stores';
+	import { downloadFile } from '$lib/utilities';
+	import { service } from '$lib/stores';
 	import { UploadProgress } from '$lib/components';
 
 	let pakNumber = 0;
@@ -10,6 +10,8 @@
 	let isDoingSomething = false;
 	let isCanceling = false;
 	let files: FileList;
+
+	const toastStore = getToastStore();
 
 	const n64ReadFileRecursive = async (
 		chrc: BluetoothRemoteGATTCharacteristic,
@@ -90,12 +92,12 @@
 		return data;
 	};
 
-	const n64ReadFile = async (service: BluetoothRemoteGATTService, pak: number) => {
+	const n64ReadFile = async (pak: number) => {
 		var data = new Uint8Array(pakSize);
 		var offset = new Uint32Array([Number(pak) * pakSize]);
-		let ctrl_chrc = await service.getCharacteristic(brUuid[10]);
+		let ctrl_chrc = await $service!.getCharacteristic(brUuid[10]);
 		ctrl_chrc.writeValue(offset);
-		const chrc = await service.getCharacteristic(brUuid[11]);
+		const chrc = await $service!.getCharacteristic(brUuid[11]);
 		await n64ReadFileRecursive(chrc, data, 0);
 		offset[0] = 0;
 		ctrl_chrc.writeValue(offset);
@@ -126,90 +128,103 @@
 	};
 
 	const n64WriteFile = async (
-		service: BluetoothRemoteGATTService,
 		data: ArrayBuffer,
 		pak: number
 	) => {
-		const chrc = await service.getCharacteristic(brUuid[10]);
+		const chrc = await $service!.getCharacteristic(brUuid[10]);
 		const offset = new Uint32Array([Number(pak) * pakSize]);
 		await chrc.writeValue(offset);
-		const chrc2 = await service.getCharacteristic(brUuid[11]);
+		const chrc2 = await $service!.getCharacteristic(brUuid[11]);
 		await n64WriteRecursive(chrc2, data, 0);
 		offset[0] = 0;
-		chrc.writeValue(offset);
+		await chrc.writeValue(offset);
 	};
 
 	const onReadClick = async () => {
-		if ($device) {
-			try {
-				isDoingSomething = true;
-				const service = await getService($device);
-				const data = await n64ReadFile(service, pakNumber);
+		try {
+			isDoingSomething = true;
+			const data = await n64ReadFile(pakNumber);
+			isDoingSomething = false;
+			progress = 0;
 
-				isDoingSomething = false;
-				progress = 0;
-				$device.gatt?.disconnect();
+			downloadFile(
+				new Blob([data.buffer], { type: 'application/mpk' }),
+				`ctrl_pak-${pakNumber + 1}.mpk`
+			);
 
-				downloadFile(
-					new Blob([data.buffer], { type: 'application/mpk' }),
-					`ctrl_pak-${pakNumber + 1}.mpk`
-				);
-			} catch {
-				isDoingSomething = false;
-				progress = 0;
-				$device.gatt?.disconnect();
-			}
+			const t: ToastSettings = {
+				message: 'Success reading controller pak',
+				background: 'variant-filled-success'
+			};
+			toastStore.trigger(t);
+		} catch (error) {
+			const t: ToastSettings = {
+				message: 'There was an error reading the controller pak!',
+				autohide: false,
+				background: 'variant-filled-error'
+			};
+			toastStore.trigger(t);
+			isDoingSomething = false;
+			progress = 0;
 		}
 	};
 
 	const onWriteClick = async () => {
-		if ($device) {
-			try {
-				isDoingSomething = true;
-				const service = await getService($device);
-
-				const reader = new FileReader();
-				// reader.onerror = errorHandler;
-				reader.onabort = (_) => {
-					console.log('File read cancelled');
+		try {
+			isDoingSomething = true;
+			const reader = new FileReader();
+			reader.onabort = (_) => {
+				console.log('File write cancelled');
+			};
+			reader.onload = async (_) => {
+				const data = reader.result?.slice(0, pakSize);
+				if (data && data instanceof ArrayBuffer) {
+					await n64WriteFile(data, pakNumber);
+				}
+				const t: ToastSettings = {
+					message: 'Success writing',
+					background: 'variant-filled-success'
 				};
-				reader.onload = async (_) => {
-					const data = reader.result?.slice(0, pakSize);
-					if (data && data instanceof ArrayBuffer) {
-						await n64WriteFile(service, data, pakNumber);
-					}
-					isDoingSomething = false;
-					progress = 0;
-					$device.gatt?.disconnect();
-				};
+				toastStore.trigger(t);
 
-				// Read in the image file as a binary string.
-				reader.readAsArrayBuffer(files[0]);
-			} catch {
 				isDoingSomething = false;
 				progress = 0;
-				$device.gatt?.disconnect();
-			}
+			};
+
+			// Read in the image file as a binary string.
+			reader.readAsArrayBuffer(files[0]);
+		} catch {
+			const t: ToastSettings = {
+				message: 'There was an error writing!',
+				autohide: false,
+				background: 'variant-filled-error'
+			};
+			toastStore.trigger(t);
+			isDoingSomething = false;
+			progress = 0;
 		}
 	};
 
 	const onFormatClick = async () => {
-		if ($device) {
-			try {
-				isDoingSomething = true;
-				const service = await getService($device);
-				console.log('writing');
-				await n64WriteFile(service, makeFormattedPak().buffer, pakNumber);
-				console.log('done');
-				isDoingSomething = false;
-				progress = 0;
-				$device.gatt?.disconnect();
-			} catch (error) {
-				console.log('error formatting!', error);
-				isDoingSomething = false;
-				progress = 0;
-				$device.gatt?.disconnect();
-			}
+		try {
+			isDoingSomething = true;
+			await n64WriteFile(makeFormattedPak().buffer, pakNumber);
+			const t: ToastSettings = {
+				message: 'Success formatting',
+				background: 'variant-filled-success'
+			};
+			toastStore.trigger(t);
+			isDoingSomething = false;
+			progress = 0;
+		} catch (error) {
+			const t: ToastSettings = {
+				message: 'There was an error formatting!',
+				autohide: false,
+				background: 'variant-filled-error'
+			};
+			toastStore.trigger(t);
+			isDoingSomething = false;
+			progress = 0;
 		}
 	};
 
@@ -229,24 +244,28 @@
 	</label>
 
 	<div class="flex md:flex-row gap-4 md:items-center flex-col">
-		<button on:click={onReadClick} class="btn variant-ghost" disabled={isDoingSomething || !$device}
-			>Read</button
+		<button 
+			on:click={onReadClick} 
+			class="btn variant-ghost" 
+			disabled={isDoingSomething || !$service}
 		>
+			Read
+		</button>
 
 		<button
 			on:click={onFormatClick}
 			class="btn variant-ghost"
-			disabled={isDoingSomething || !$device}
+			disabled={isDoingSomething || !$service}
 		>
-			Format</button
-		>
+			Format
+		</button>
 
 		<div class="flex flex-row items-center gap-4">
 			<FileButton
 				name="files"
 				bind:files
 				button="btn variant-ghost"
-				disabled={isDoingSomething || !$device}>Upload</FileButton
+				disabled={isDoingSomething || !$service}>Upload</FileButton
 			>
 
 			<p>Select .MPK file to write</p>
@@ -255,7 +274,7 @@
 		<button
 			on:click={onWriteClick}
 			class="btn variant-ghost"
-			disabled={isDoingSomething || !$device || !files?.length}
+			disabled={isDoingSomething || !$service || !files?.length}
 		>
 			Write</button
 		>
