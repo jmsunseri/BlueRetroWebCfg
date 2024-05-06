@@ -6,10 +6,15 @@
 		cfg_cmd_set_gameid_cfg
 	} from '$lib/constants';
 	import { deviceConfig } from '$lib/stores';
+	import { getGameId, getGameName } from '$lib/utilities';
 
-	import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
+	import { RadioGroup, RadioItem, getToastStore, type ToastSettings } from '@skeletonlabs/skeleton';
 	let value: ControllerConfigType = 'global';
 	export let service: BluetoothRemoteGATTService | undefined;
+	export let gameId: string;
+	let gameName: string;
+
+	const toastStore = getToastStore();
 
 	const getConfigSource = async (): Promise<ControllerConfigType> => {
 		const cmd_chrc = await service!.getCharacteristic(brUuid[7]);
@@ -31,29 +36,53 @@
 		await setConfig(cfg_cmd_set_gameid_cfg);
 	};
 
-	
-
 	const onChange = async () => {
 		if (value === 'gameid') {
-			await setGameIdConfig();
-			deviceConfig.update((c) => ({
-				...c,
-				source: 'gameid'
-			}));
+			try {
+				await setGameIdConfig();
+				deviceConfig.update((c) => ({
+					...c,
+					source: 'gameid'
+				}));
+				gameId = await getGameId(service!);
+				console.log('game id detected: ', gameId);
+				gameName = (await getGameName(gameId))?.toString() || '';
+				console.log('game name: ', gameName);
+			} catch (error) {
+				console.log('there was an error switching to gameid mode', error);
+				const t: ToastSettings = {
+					message: 'There was an error switching to gameid mode ',
+					autohide: false,
+					background: 'variant-filled-error'
+				};
+				toastStore.trigger(t);
+			}
 		} else {
-			await setDefaultConfig();
-			deviceConfig.update((c) => ({
-				...c,
-				source: 'global'
-			}));
+			try {
+				await setDefaultConfig();
+				deviceConfig.update((c) => ({
+					...c,
+					source: 'global'
+				}));
+				gameId = '';
+				gameName = '';
+			} catch (error) {
+				console.log('there was an error switching to global mode', error);
+				const t: ToastSettings = {
+					message: 'There was an error switching to global mode ',
+					autohide: false,
+					background: 'variant-filled-error'
+				};
+				toastStore.trigger(t);
+			}
 		}
 	};
 
-	$: if($deviceConfig && !$deviceConfig.source && service) {
-		getConfigSource().then((source) => {
-			value = source
-		});
-	}
+	// $: if ($deviceConfig && !$deviceConfig.source && service) {
+	// 	getConfigSource().then((source) => {
+	// 		value = source;
+	// 	});
+	// }
 </script>
 
 <div class="flex flex-col gap-1">
@@ -65,17 +94,30 @@
 		active="variant-filled-primary"
 		hover="hover:variant-soft-primary"
 		rounded="rounded-token"
-		disabled={!service}
 	>
-		<RadioItem bind:group={value} on:change={onChange} name="justify" value={'global'}
-			>Global</RadioItem
+		<RadioItem
+			bind:group={value}
+			on:change={onChange}
+			name="justify"
+			value={'global'}
+			disabled={!service}>Global</RadioItem
 		>
-		<RadioItem bind:group={value} on:change={onChange} name="justify" value={'gameid'}
-			>Game ID</RadioItem
+		<RadioItem
+			bind:group={value}
+			on:change={onChange}
+			name="justify"
+			value={'gameid'}
+			disabled={!service}>Game ID</RadioItem
 		>
 	</RadioGroup>
-	<p class="text-sm">
-		Start the game you wish to configure button mappings for, disconnect all controllers from
-		BlueRetro, and press the Game ID button
-	</p>
+	{#if gameName}
+		<p class="text-sm">
+			You are editing the controller configuration for the game {gameName}
+		</p>
+	{:else}
+		<p class="text-sm">
+			Start the game you wish to configure button mappings for, disconnect all controllers from
+			BlueRetro, and press the Game ID button
+		</p>
+	{/if}
 </div>

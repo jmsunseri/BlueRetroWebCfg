@@ -2,9 +2,6 @@ import { brUuid } from '$lib/constants';
 
 export const getService = async (device: BluetoothDevice): Promise<BluetoothRemoteGATTService> => {
     try {
-
-
-
         if (!device.gatt?.connected) {
             console.log('Connecting to GATT Server...');
             await device.gatt?.connect();

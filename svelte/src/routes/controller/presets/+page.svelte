@@ -12,7 +12,7 @@
 	let konsole: string | undefined = undefined;
 	let output: number = 0;
 
-	let gameId: number = 0;
+	let gameId: string;
 
 	const toastStore = getToastStore();
 
@@ -31,11 +31,9 @@
 		});
 	};
 
- 
-
 	const savePresetInput = async () => {
 		const btnMap: { [key: string]: number } = btn;
-		if(preset && $service) {
+		if (preset && $service) {
 			var nbMapping = preset.map.length;
 			var cfgSize = nbMapping * 8 + 3;
 			var cfg = new Uint8Array(cfgSize);
@@ -51,9 +49,7 @@
 				cfg[j++] = +preset.map[i][4];
 				cfg[j++] = +preset.map[i][5];
 				cfg[j++] = +preset.map[i][6];
-				cfg[j++] =
-				+preset.map[i][7] |
-				(+preset.map[i][8] << 4);
+				cfg[j++] = +preset.map[i][7] | (+preset.map[i][8] << 4);
 			}
 
 			try {
@@ -73,7 +69,7 @@
 				toastStore.trigger(t);
 			}
 		}
-  	};
+	};
 
 	onMount(async () => {
 		const configFiles = await getFiles();
@@ -83,7 +79,7 @@
 	$: saveButtonEnabled = preset;
 </script>
 
-<GameId />
+<GameId service={$service} bind:gameId />
 
 <label class="label">
 	<span>Output #</span>
@@ -102,6 +98,7 @@
 		on:change={() => {
 			preset = undefined;
 		}}
+		disabled={!$service}
 	>
 		{#each Object.keys(consoles) as console}
 			<option value={console}>{console}</option>
@@ -111,7 +108,7 @@
 
 <label class="label">
 	<span>Preset</span>
-	<select class="select" bind:value={preset}>
+	<select class="select" bind:value={preset} disabled={!$service}>
 		{#if konsole}
 			{#each consoles[konsole] as preset}
 				<option value={preset}>{preset.name}</option>
@@ -120,10 +117,10 @@
 	</select>
 </label>
 
-<button 
-	on:click={savePresetInput} 
-	type="button" 
-	class="btn variant-filled" 
+<button
+	on:click={savePresetInput}
+	type="button"
+	class="btn variant-filled"
 	disabled={!saveButtonEnabled || !$service}
 >
 	Save
