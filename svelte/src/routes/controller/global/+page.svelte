@@ -7,13 +7,15 @@
 		brUuid
 	} from '$lib/constants';
 	import type { IGlobalConfig } from '$lib/interfaces';
-	import { getToastStore, type ToastSettings } from '@skeletonlabs/skeleton';
+	import { getSendToast } from '$lib/utilities';
+	import { getToastStore } from '@skeletonlabs/skeleton';
+	
 	let system: number = 0;
 	let multitap: number = 0;
 	let inquiryMode: number | undefined;
 	let bank: number | undefined;
 
-	const toastStore = getToastStore();
+	const sendToast = getSendToast(getToastStore());
 
 	const getApiVersion = async () => {
 		console.log('Reading Api version...');
@@ -88,19 +90,10 @@
 					}
 				}));
 
-				const t: ToastSettings = {
-					message: 'Success updating global configuration!',
-					background: 'variant-filled-success'
-				};
-				toastStore.trigger(t);
+				sendToast('success', 'Success updating global configuration!');
 			} catch (error) {
 				console.log('there was an error saving the global config', error);
-				const t: ToastSettings = {
-					message: 'There was an error saving the global config',
-					autohide: false,
-					background: 'variant-filled-error'
-				};
-				toastStore.trigger(t);
+				sendToast('error', 'There was an error saving the global config');
 			}
 		}
 	};

@@ -6,13 +6,13 @@
 		cfg_cmd_get_file,
 		cfg_cmd_open_dir
 	} from '$lib/constants';
-	import { getGameName, getService } from '$lib/utilities';
+	import { getGameName, getSendToast, getService } from '$lib/utilities';
 	import { device, deviceConfig, service } from '$lib/stores';
 	import { IconTrash } from '@tabler/icons-svelte';
 	import type { IBlueRetroFile } from '$lib/interfaces';
-	import { getToastStore, type  ToastSettings } from '@skeletonlabs/skeleton';
+	import { getToastStore } from '@skeletonlabs/skeleton';
 
-	const toastStore = getToastStore();
+	const sendToast = getSendToast(getToastStore());
 
 	const readFileRecursive = async (
 		chrc: BluetoothRemoteGATTCharacteristic,
@@ -52,18 +52,9 @@
 					...c,
 					files: c?.files?.filter((_, i) => i !== index)
 				}));
-				const t: ToastSettings = {
-					message: 'Success updating firmware',
-					background: 'variant-filled-success'
-				};
-				toastStore.trigger(t);
+				sendToast('success', 'Success updating firmware');
 			} catch (error) {
-				const t: ToastSettings = {
-					message: 'Hardware and firmware mismatch!',
-					autohide: false,
-					background: 'variant-filled-error'
-				};
-				toastStore.trigger(t);
+				sendToast('error', 'Hardware and firmware mismatch!');
 				console.log(`error deleting file: ${filename}`, error);
 			}
 		}

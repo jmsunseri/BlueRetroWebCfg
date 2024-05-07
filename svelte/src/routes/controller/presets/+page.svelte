@@ -3,18 +3,17 @@
 	import { btn, maxMainInput } from '$lib/constants';
 	import { service } from '$lib/stores';
 	import type { IPreset, IPresetFile } from '$lib/interfaces';
-	import { getToastStore, type ToastSettings } from '@skeletonlabs/skeleton';
-	import { writeInputConfig } from '$lib/utilities';
+	import { getSendToast, writeInputConfig } from '$lib/utilities';
 	import { GameId } from '$lib/components';
+	import { getToastStore } from '@skeletonlabs/skeleton';
 
 	const consoles: { [key: string]: IPreset[] } = {};
 	let preset: IPreset | undefined = undefined;
 	let konsole: string | undefined = undefined;
-	let output: number = 0;
-
+	let input: number = 0;
 	let gameId: string;
 
-	const toastStore = getToastStore();
+	const sendToast = getSendToast(getToastStore());
 
 	const getFiles = async (): Promise<IPresetFile[]> => {
 		const response = await fetch(
@@ -44,7 +43,7 @@
 			for (var i = 0; i < nbMapping; i++) {
 				cfg[j++] = btnMap[preset.map[i][0]];
 				cfg[j++] = btnMap[preset.map[i][1]];
-				cfg[j++] = +preset.map[i][2] + output;
+				cfg[j++] = +preset.map[i][2] + input;
 				cfg[j++] = +preset.map[i][3];
 				cfg[j++] = +preset.map[i][4];
 				cfg[j++] = +preset.map[i][5];
@@ -53,20 +52,11 @@
 			}
 
 			try {
-				await writeInputConfig(output, cfg, $service);
-				const t: ToastSettings = {
-					message: 'Success updating output configuration!',
-					background: 'variant-filled-success'
-				};
-				toastStore.trigger(t);
+				await writeInputConfig(input, cfg, $service);
+				sendToast('success', 'Success updating output configuration!');
 			} catch (error) {
 				console.log('there was an error writing your preset configuration', error);
-				const t: ToastSettings = {
-					message: 'There was an error saving ',
-					autohide: false,
-					background: 'variant-filled-error'
-				};
-				toastStore.trigger(t);
+				sendToast('error', 'There was an error saving ');
 			}
 		}
 	};
@@ -82,8 +72,8 @@
 <GameId service={$service} bind:gameId />
 
 <label class="label">
-	<span>Output #</span>
-	<select class="select" bind:value={output}>
+	<span>Input #</span>
+	<select class="select" bind:value={input}>
 		{#each { length: maxMainInput } as _, i}
 			<option value={i}>{i + 1}</option>
 		{/each}

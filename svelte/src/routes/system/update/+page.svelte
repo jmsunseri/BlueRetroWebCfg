@@ -9,18 +9,17 @@
 		urlLatestRelease
 	} from '$lib/constants';
 	import { device, deviceConfig } from '$lib/stores';
-	import { FileButton, type ToastSettings } from '@skeletonlabs/skeleton';
-	import { getService } from '$lib/utilities';
-	import { getToastStore } from '@skeletonlabs/skeleton';
+	import { FileButton, getToastStore } from '@skeletonlabs/skeleton';
+	import { getSendToast, getService } from '$lib/utilities';
 	import { UploadProgress } from '$lib/components';
-
-	const toastStore = getToastStore();
 
 	let latestVersion: string | undefined;
 	let isDoingSomething = false;
 	let progress = 0;
 	let isCanceling = false;
 	let files: FileList;
+
+	const sendToast = getSendToast(getToastStore());
 
 	onMount(async () => {
 		const response = await fetch(urlLatestRelease);
@@ -88,20 +87,10 @@
 						let isNewFirmwareFileHw2 = header.indexOf('hw2') != -1;
 						if (isHw2 == isNewFirmwareFileHw2) {
 							await otaWriteFirmware(service, reader.result as ArrayBuffer);
-
-							const t: ToastSettings = {
-								message: 'Success updating firmware',
-								background: 'variant-filled-success'
-							};
-							toastStore.trigger(t);
+							sendToast('success', 'Success updating firmware');
 							device.set(undefined);
 						} else {
-							const t: ToastSettings = {
-								message: 'Hardware and firmware mismatch!',
-								autohide: false,
-								background: 'variant-filled-error'
-							};
-							toastStore.trigger(t);
+							sendToast('error', 'Hardware and firmware mismatch!');
 						}
 					}
 
@@ -113,12 +102,7 @@
 				// Read in the image file as a binary string.
 				reader.readAsArrayBuffer(files[0]);
 			} catch {
-				const t: ToastSettings = {
-					message: 'There was an error updating the firmware!',
-					autohide: false,
-					background: 'variant-filled-error'
-				};
-				toastStore.trigger(t);
+				sendToast('error', 'There was an error updating the firmware!');
 				isDoingSomething = false;
 				progress = 0;
 			}

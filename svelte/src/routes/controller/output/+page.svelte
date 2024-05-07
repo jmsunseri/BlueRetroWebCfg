@@ -1,15 +1,15 @@
 <script lang="ts">
 	import { service } from '$lib/stores';
 	import { devCfg as outputModes, accCfg as accessories, maxOutput, brUuid } from '$lib/constants';
-	import type { ToastSettings } from '@skeletonlabs/skeleton';
+	import { getSendToast } from '$lib/utilities';
 	import { getToastStore } from '@skeletonlabs/skeleton';
 
-	const toastStore = getToastStore();
 	let output: number = 0;
 	let accessory: number = 0;
 	let mode: number = 0;
-
 	let isDoingSomething = false;
+
+	const sendToast = getSendToast(getToastStore());
 
 	const loadOutputConfig = async () => {
 		try {
@@ -27,12 +27,10 @@
 				`There was and error trying to retrieve your configuration for output ${output + 1}`,
 				error
 			);
-			const t: ToastSettings = {
-				message: `There was an error trying to retrieve your configuration for output ${output + 1}!`,
-				autohide: false,
-				background: 'variant-filled-error'
-			};
-			toastStore.trigger(t);
+			sendToast(
+				'error',
+				`There was an error trying to retrieve your configuration for output ${output + 1}!`
+			);
 		}
 		isDoingSomething = false;
 	};
@@ -49,19 +47,10 @@
 
 				chrc = await $service.getCharacteristic(brUuid[3]);
 				await chrc.writeValue(data);
-				const t: ToastSettings = {
-					message: `Success updating output ${output + 1}`,
-					background: 'variant-filled-success'
-				};
-				toastStore.trigger(t);
+				sendToast('success', `Success updating output ${output + 1}`);
 			} catch (error) {
 				console.log(`There was and error trying to save output ${output + 1}`, error);
-				const t: ToastSettings = {
-					message: `There was an error trying to save output ${output + 1}!`,
-					autohide: false,
-					background: 'variant-filled-error'
-				};
-				toastStore.trigger(t);
+				sendToast('error', `There was an error trying to save output ${output + 1}!`);
 			}
 			isDoingSomething = false;
 		}

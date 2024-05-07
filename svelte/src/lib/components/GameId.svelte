@@ -6,15 +6,15 @@
 		cfg_cmd_set_gameid_cfg
 	} from '$lib/constants';
 	import { deviceConfig } from '$lib/stores';
-	import { getGameId, getGameName } from '$lib/utilities';
+	import { getGameId, getGameName, getSendToast } from '$lib/utilities';
+	import { RadioGroup, RadioItem, getToastStore } from '@skeletonlabs/skeleton';
 
-	import { RadioGroup, RadioItem, getToastStore, type ToastSettings } from '@skeletonlabs/skeleton';
-	let value: ControllerConfigType = 'global';
 	export let service: BluetoothRemoteGATTService | undefined;
 	export let gameId: string;
 	let gameName: string;
+	let value: ControllerConfigType = 'global';
 
-	const toastStore = getToastStore();
+	const sendToast = getSendToast(getToastStore());
 
 	const getConfigSource = async (): Promise<ControllerConfigType> => {
 		const cmd_chrc = await service!.getCharacteristic(brUuid[7]);
@@ -50,12 +50,7 @@
 				console.log('game name: ', gameName);
 			} catch (error) {
 				console.log('there was an error switching to gameid mode', error);
-				const t: ToastSettings = {
-					message: 'There was an error switching to gameid mode ',
-					autohide: false,
-					background: 'variant-filled-error'
-				};
-				toastStore.trigger(t);
+				sendToast('error', 'There was an error switching to gameid mode ');
 			}
 		} else {
 			try {
@@ -68,12 +63,7 @@
 				gameName = '';
 			} catch (error) {
 				console.log('there was an error switching to global mode', error);
-				const t: ToastSettings = {
-					message: 'There was an error switching to global mode ',
-					autohide: false,
-					background: 'variant-filled-error'
-				};
-				toastStore.trigger(t);
+				sendToast('error', 'There was an error switching to global mode ');
 			}
 		}
 	};

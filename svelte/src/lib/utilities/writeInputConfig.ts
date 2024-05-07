@@ -19,10 +19,10 @@ const presetWriteRecursive = async (
 	}
 }
 
-const writeInputConfig = async (output: number, cfg: Uint8Array, service: BluetoothRemoteGATTService) => {
+const writeInputConfig = async (input: number, cfg: Uint8Array, service: BluetoothRemoteGATTService) => {
 	let ctrl_chrc = await service!.getCharacteristic(brUuid[4]);
 	const data_chrc = await service!.getCharacteristic(brUuid[5]);
-	const inputCtrl = new Uint16Array([output, 0]);
+	const inputCtrl = new Uint16Array([input, 0]);
 	await presetWriteRecursive(cfg, inputCtrl, ctrl_chrc, data_chrc);
 }
 

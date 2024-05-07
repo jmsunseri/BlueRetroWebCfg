@@ -1,44 +1,58 @@
 <script lang="ts">
 	import { ButtonMapping, GameId } from '$lib/components';
 	import type { IButtonMapping } from '$lib/interfaces';
-	import { IconPlus } from '@tabler/icons-svelte';
+	import { IconPlus, IconDeviceFloppy } from '@tabler/icons-svelte';
 	import { maxMainInput, labelName as deviceLabels, brUuid, maxMappings } from '$lib/constants';
 	import { service } from '$lib/stores';
+	import { getSendToast, writeInputConfig } from '$lib/utilities';
+	import { getToastStore } from '@skeletonlabs/skeleton';
 
 	let source: number = 0;
 	let input: number;
 	let destination: number = 0;
 	let buttonMappings: Array<IButtonMapping> = [];
 	let gameId: string;
+	let isDoingSomething = false;
 
-	const addMapping = () => {
-		buttonMappings = [...buttonMappings, {}];
-	};
+	const sendToast = getSendToast(getToastStore());
 
 	const removeMapping = (index: number) => {
 		buttonMappings = buttonMappings.filter((_, i) => index != i);
 	};
 
-	const addInput = () => {
+	const addMapping = () => {
 		if (buttonMappings.length < maxMappings) {
 			buttonMappings = [...buttonMappings, { max: 100, threshold: 50, deadzone: 135 }];
 		}
 	};
 
 	const loadInputConfiguration = async (inputNumber: number) => {
-		const config = await readInputConfiguration(inputNumber);
-		let offset = 3;
-		buttonMappings = new Array<IButtonMapping>(config[2]).fill({}).map((_) => ({
-			source: config[offset++],
-			destination: config[offset++],
-			destinationId: config[offset++],
-			max: config[offset++],
-			threshold: config[offset++],
-			deadzone: config[offset++],
-			turbo: config[offset++],
-			scaling: config[offset],
-			diagonal: config[offset++] >> 4
-		}));
+		try {
+			isDoingSomething = true;
+			const config = await readInputConfiguration(inputNumber);
+			let offset = 3;
+			buttonMappings = new Array<IButtonMapping | undefined>(config[2]).fill({}).map((_) => ({
+				source: config[offset++],
+				destination: config[offset++],
+				destinationId: config[offset++],
+				max: config[offset++],
+				threshold: config[offset++],
+				deadzone: config[offset++],
+				turbo: config[offset++],
+				scaling: config[offset],
+				diagonal: config[offset++] >> 4
+			}));
+		} catch (error) {
+			console.log(
+				`there was an error fetching button mappings for input ${inputNumber + 1}`,
+				error
+			);
+			sendToast(
+				'error',
+				`There was an error fetching button mappings for input ${inputNumber + 1}`
+			);
+		}
+		isDoingSomething = false;
 	};
 
 	const readRecursive = async (
@@ -57,6 +71,34 @@
 		} else {
 			return config;
 		}
+	};
+
+	const writeConfiguration = async () => {
+		isDoingSomething = true;
+		const config = new Uint8Array(buttonMappings.length * 8 + 3);
+		let index = 0;
+		config[index++] = 0;
+		config[index++] = 0;
+		config[index++] = buttonMappings.length;
+		buttonMappings.forEach((bm: IButtonMapping) => {
+			config[index++] = bm.source!;
+			config[index++] = bm.destination!;
+			config[index++] = bm.destinationId!;
+			config[index++] = bm.max!;
+			config[index++] = bm.threshold!;
+			config[index++] = bm.deadzone!;
+			config[index++] = bm.turbo!;
+			config[index++] = bm.scaling! | (bm.diagonal! << 4);
+		});
+
+		try {
+			await writeInputConfig(input, config, $service!);
+			sendToast('success', 'Success updating output configuration!');
+		} catch (error) {
+			console.log('there was an error writing your preset configuration', error);
+			sendToast('error', 'There was an error saving ');
+		}
+		isDoingSomething = false;
 	};
 
 	const readInputConfiguration = async (inputNumber: number) => {
@@ -104,6 +146,10 @@
 	</label>
 </div>
 
+<button disabled={!$service} class="btn variant-filled" on:click={writeConfiguration}>
+	Save Mappings <IconDeviceFloppy />
+</button>
+
 {#if buttonMappings.length}
 	{#each buttonMappings as mapping, index}
 		<ButtonMapping
@@ -124,4 +170,6 @@
 	{/each}
 {/if}
 
-<button class="btn btn-filled" on:click={addMapping}>Add Mapping <IconPlus /> </button>
+<button disabled={!$service} class="btn variant-ghost-tertiary" on:click={addMapping}>
+	Add Mapping <IconPlus />
+</button>

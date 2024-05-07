@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { FileButton, getToastStore, type ToastSettings } from '@skeletonlabs/skeleton';
+	import { FileButton, getToastStore } from '@skeletonlabs/skeleton';
 	import { block, brUuid, mtu, pakSize } from '$lib/constants';
-	import { downloadFile } from '$lib/utilities';
+	import { downloadFile, getSendToast } from '$lib/utilities';
 	import { service } from '$lib/stores';
 	import { UploadProgress } from '$lib/components';
 
@@ -11,7 +11,7 @@
 	let isCanceling = false;
 	let files: FileList;
 
-	const toastStore = getToastStore();
+	const sendToast = getSendToast(getToastStore());
 
 	const n64ReadFileRecursive = async (
 		chrc: BluetoothRemoteGATTCharacteristic,
@@ -127,10 +127,7 @@
 		}
 	};
 
-	const n64WriteFile = async (
-		data: ArrayBuffer,
-		pak: number
-	) => {
+	const n64WriteFile = async (data: ArrayBuffer, pak: number) => {
 		const chrc = await $service!.getCharacteristic(brUuid[10]);
 		const offset = new Uint32Array([Number(pak) * pakSize]);
 		await chrc.writeValue(offset);
@@ -151,19 +148,9 @@
 				new Blob([data.buffer], { type: 'application/mpk' }),
 				`ctrl_pak-${pakNumber + 1}.mpk`
 			);
-
-			const t: ToastSettings = {
-				message: 'Success reading controller pak',
-				background: 'variant-filled-success'
-			};
-			toastStore.trigger(t);
+			sendToast('success', 'Success reading controller pak');
 		} catch (error) {
-			const t: ToastSettings = {
-				message: 'There was an error reading the controller pak!',
-				autohide: false,
-				background: 'variant-filled-error'
-			};
-			toastStore.trigger(t);
+			sendToast('error', 'There was an error reading the controller pak!');
 			isDoingSomething = false;
 			progress = 0;
 		}
@@ -181,12 +168,7 @@
 				if (data && data instanceof ArrayBuffer) {
 					await n64WriteFile(data, pakNumber);
 				}
-				const t: ToastSettings = {
-					message: 'Success writing',
-					background: 'variant-filled-success'
-				};
-				toastStore.trigger(t);
-
+				sendToast('success', 'Success writing');
 				isDoingSomething = false;
 				progress = 0;
 			};
@@ -194,12 +176,7 @@
 			// Read in the image file as a binary string.
 			reader.readAsArrayBuffer(files[0]);
 		} catch {
-			const t: ToastSettings = {
-				message: 'There was an error writing!',
-				autohide: false,
-				background: 'variant-filled-error'
-			};
-			toastStore.trigger(t);
+			sendToast('error', 'There was an error writing!');
 			isDoingSomething = false;
 			progress = 0;
 		}
@@ -209,20 +186,11 @@
 		try {
 			isDoingSomething = true;
 			await n64WriteFile(makeFormattedPak().buffer, pakNumber);
-			const t: ToastSettings = {
-				message: 'Success formatting',
-				background: 'variant-filled-success'
-			};
-			toastStore.trigger(t);
+			sendToast('success', 'Success formatting');
 			isDoingSomething = false;
 			progress = 0;
 		} catch (error) {
-			const t: ToastSettings = {
-				message: 'There was an error formatting!',
-				autohide: false,
-				background: 'variant-filled-error'
-			};
-			toastStore.trigger(t);
+			sendToast('error', 'There was an error formatting!');
 			isDoingSomething = false;
 			progress = 0;
 		}
@@ -244,9 +212,9 @@
 	</label>
 
 	<div class="flex md:flex-row gap-4 md:items-center flex-col">
-		<button 
-			on:click={onReadClick} 
-			class="btn variant-ghost" 
+		<button
+			on:click={onReadClick}
+			class="btn variant-ghost"
 			disabled={isDoingSomething || !$service}
 		>
 			Read
