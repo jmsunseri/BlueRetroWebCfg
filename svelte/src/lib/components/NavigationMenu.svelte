@@ -55,6 +55,11 @@
 
 		<p class="font-bold pl-4 text-xl">System</p>
 		<li>
+			<a on:click={onItemSelect} class={classesActive('/system/info')} href="/system/info"
+				>Information</a
+			>
+		</li>
+		<li>
 			<a on:click={onItemSelect} class={classesActive('/system/files')} href="/system/files"
 				>Files</a
 			>

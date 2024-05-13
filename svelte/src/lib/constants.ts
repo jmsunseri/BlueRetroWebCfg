@@ -511,3 +511,4 @@ export const maxOutput = 12;
 export const maxMax = 255;
 export const maxThres = 100;
 export const maxMappings = 255;
+export const maxConnectRetries = 50;

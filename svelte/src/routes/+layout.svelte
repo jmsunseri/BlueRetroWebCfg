@@ -8,14 +8,23 @@
 		Toast,
 		storePopup,
 		initializeStores,
-		getDrawerStore
+		getDrawerStore,
+		getToastStore,
+		popup,
+		type PopupSettings
 	} from '@skeletonlabs/skeleton';
-	import { IconBrandGithub, IconBrandDiscord, IconX, IconMenu2 } from '@tabler/icons-svelte';
-	import { brUuid, cfg_cmd_get_fw_name } from '$lib/constants';
+	import {
+		IconBrandGithub,
+		IconBrandDiscord,
+		IconMenu2,
+		IconBluetoothConnected,
+		IconBluetoothOff
+	} from '@tabler/icons-svelte';
+	import { brUuid, cfg_cmd_get_fw_name, maxConnectRetries } from '$lib/constants';
 	import { deviceConfig, device, service } from '$lib/stores';
 	import { NavigationMenu } from '$lib/components';
 	import type { IDeviceConfig } from '$lib/interfaces';
-	import { getService } from '$lib/utilities';
+	import { getSendToast, getService } from '$lib/utilities';
 
 	// Floating UI for Popups
 	import { computePosition, autoUpdate, flip, shift, offset, arrow } from '@floating-ui/dom';
@@ -23,6 +32,18 @@
 
 	initializeStores();
 	const drawerStore = getDrawerStore();
+	const sendToast = getSendToast(getToastStore());
+	let isGettingService = false;
+
+	let connectedPopup: PopupSettings = {
+		target: 'connectedPopup',
+		event: 'click'
+	};
+
+	let disconnectedPopup: PopupSettings = {
+		target: 'disconnectedPopup',
+		event: 'click'
+	};
 
 	const getAppVersion = async (service: BluetoothRemoteGATTService) => {
 		const charactristics = await service.getCharacteristic(brUuid[9]);
@@ -64,6 +85,7 @@
 	const unselectDevice = () => {
 		device.set(undefined);
 		deviceConfig.set(undefined);
+		service.set(undefined);
 	};
 
 	const getDevice = async (): Promise<BluetoothDevice> => {
@@ -72,7 +94,6 @@
 			filters: [{ namePrefix: 'BlueRetro' }],
 			optionalServices: [brUuid[0]]
 		});
-		device.set(d);
 		return d;
 	};
 
@@ -106,19 +127,56 @@
 		service.set(s);
 	};
 
+	const initializeDevice = async (dev: BluetoothDevice, retry: number = 0) => {
+		if (retry < maxConnectRetries) {
+			try {
+				const service = await getService(dev);
+				if (service) {
+					await initDeviceConfiguration(service);
+					sendToast('success', `Successfully connected to the BlueRetro service`);
+				} else {
+					sendToast('error', `Max connection reties reached: ${maxConnectRetries}`);
+				}
+			} catch (error) {
+				console.log('Error initializing device', error);
+				await initializeDevice(dev, retry + 1);
+			}
+		} else {
+			throw 'There was an error initializing the device max retries exceeded';
+		}
+	};
+
 	const selectDevice = async () => {
+		isGettingService = true;
 		try {
-			const device = await getDevice();
-			const service = await getService(device);
-			await initDeviceConfiguration(service);
-			// device.gatt?.disconnect();
+			const dev = await getDevice();
+			dev.gatt?.connected;
+			await initializeDevice(dev);
+			device.set(dev);
 		} catch (error) {
+			sendToast('error', `There was an error connecting to the device`);
 			console.log('Argh! ' + error);
 		}
+		isGettingService = false;
 	};
 
 	const onMenuClick = () => {
 		drawerStore.open({});
+	};
+
+	const onSwitchDeviceClick = async () => {
+		if ($device?.gatt?.connected) {
+			$device.gatt.disconnect();
+		}
+		unselectDevice();
+		await selectDevice();
+	};
+
+	const onDisconnectClick = async () => {
+		if ($device?.gatt?.connected) {
+			$device.gatt.disconnect();
+		}
+		unselectDevice();
 	};
 </script>
 
@@ -138,6 +196,11 @@
 					</button>
 					<strong class="text-xl text-white">BlueRetro</strong>
 				</div>
+				{#if !!$device}
+					<button class=" btn btn-icon text-white" use:popup={connectedPopup}>
+						<IconBluetoothConnected />
+					</button>
+				{/if}
 			</svelte:fragment>
 			<svelte:fragment slot="trail">
 				<div>
@@ -161,47 +224,34 @@
 			</svelte:fragment>
 		</AppBar>
 	</svelte:fragment>
-
 	<svelte:fragment slot="sidebarLeft">
 		<NavigationMenu />
 	</svelte:fragment>
-	<div class="p-4 flex gap-4 flex md:flex-row flex-col max-w-screen-md">
-		<div class="flex flex-col gap-4 flex-1">
-			{#if !$device}
-				<div class="flex-col">
-					<div class="flex gap-4 items-center">
-						<button type="button" class="btn variant-filled" on:click={selectDevice}>
-							Select Device
-						</button>
-					</div>
+	{#if !$device}
+		<div class="p-4 flex gap-4 flex md:flex-row flex-col max-w-screen-md">
+			<div class="flex flex-col gap-4 flex-1">
+				{#if isGettingService}
+					<div
+						class="border-token rounded-token border-primary-500 flex text-xl font-bold flex-start gap-4 p-4 justify-center items-center"
+					>
+						Connecting
 
-					<p class="text-sm">Disconnect all controllers from BlueRetro before connecting.</p>
-				</div>
-			{:else}
-				<div class="border-token rounded-token border-success-500 flex flex-start gap-4">
-					<div class="flex-1 flex flex-col p-4">
-						<p class="font-bold pb-4 text-xl">Selected BlueRetro Device</p>
-						{#if $device?.name && $deviceConfig?.appVersion && $deviceConfig?.bluetoothAddress}
-							<p>Device Name: {$device?.name || '...'}</p>
-							<p>
-								Installed Version: {$deviceConfig?.appVersion || '...'}
-							</p>
-							<p>Bluetooth Address: {$deviceConfig?.bluetoothAddress || '...'}</p>
-						{:else}
-							<div class="flex-none flex flex-row justify-center">
-								<ProgressRadial width="w-16" />
-							</div>
-						{/if}
+						<ProgressRadial width="w-10" />
 					</div>
-					<div>
-						<button type="button" class="btn-icon" on:click={unselectDevice}>
-							<IconX />
-						</button>
+				{:else}
+					<div class="flex-col">
+						<div class="flex gap-4 items-center">
+							<button type="button" class="btn variant-filled" on:click={selectDevice}>
+								Select Device
+							</button>
+						</div>
+
+						<p class="text-sm">Disconnect all controllers from BlueRetro before connecting.</p>
 					</div>
-				</div>
-			{/if}
+				{/if}
+			</div>
 		</div>
-	</div>
+	{/if}
 
 	<div class="p-4 flex flex-col gap-4 max-w-screen-md">
 		<slot />
@@ -210,3 +260,11 @@
 
 	<!-- Page Route Content -->
 </AppShell>
+
+<div class="card p-4 max-w-sm" data-popup="connectedPopup">
+	<div class="grid grid-cols-1 gap-2">
+		<button class="btn" on:click={onDisconnectClick}>Disconnect</button>
+		<button class="btn" on:click={onSwitchDeviceClick}>Switch Device</button>
+	</div>
+	<div class="arrow bg-surface-100-800-token" />
+</div>
