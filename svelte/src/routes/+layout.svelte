@@ -17,13 +17,10 @@
 		IconBrandGithub,
 		IconBrandDiscord,
 		IconMenu2,
-		IconBluetoothConnected,
-		IconBluetoothOff
+		IconBluetoothConnected
 	} from '@tabler/icons-svelte';
-	import { brUuid, cfg_cmd_get_fw_name, maxConnectRetries } from '$lib/constants';
-	import { deviceConfig, device, service } from '$lib/stores';
+	import { deviceConfig, device, service, isFullyInitialized } from '$lib/stores';
 	import { NavigationMenu } from '$lib/components';
-	import type { IDeviceConfig } from '$lib/interfaces';
 	import { getSendToast, getService } from '$lib/utilities';
 
 	// Floating UI for Popups
@@ -40,124 +37,23 @@
 		event: 'click'
 	};
 
-	let disconnectedPopup: PopupSettings = {
-		target: 'disconnectedPopup',
-		event: 'click'
-	};
-
-	const getAppVersion = async (service: BluetoothRemoteGATTService) => {
-		const charactristics = await service.getCharacteristic(brUuid[9]);
-		console.log('Reading App version...');
-		let enc = new TextDecoder('utf-8');
-		let app_ver = enc.decode(await charactristics.readValue());
-		return app_ver;
-	};
-
-	const getStringCmd = async (service: BluetoothRemoteGATTService, command: number) => {
-		var cmd = new Uint8Array(1);
-		var cmd_chrc = await service.getCharacteristic(brUuid[7]);
-		cmd[0] = command;
-		cmd_chrc.writeValue(cmd);
-		const dataview = await cmd_chrc.readValue();
-		let enc = new TextDecoder('utf-8');
-		let commandString = enc.decode(dataview);
-		return commandString;
-	};
-
-	const getBdAddr = async (service: BluetoothRemoteGATTService) => {
-		const charactristics = await service.getCharacteristic(brUuid[12]);
-		const dataview = await charactristics.readValue();
-		let address =
-			dataview.getUint8(5).toString(16).padStart(2, '0') +
-			':' +
-			dataview.getUint8(4).toString(16).padStart(2, '0') +
-			':' +
-			dataview.getUint8(3).toString(16).padStart(2, '0') +
-			':' +
-			dataview.getUint8(2).toString(16).padStart(2, '0') +
-			':' +
-			dataview.getUint8(1).toString(16).padStart(2, '0') +
-			':' +
-			dataview.getUint8(0).toString(16).padStart(2, '0');
-		return address;
-	};
-
 	const unselectDevice = () => {
 		device.set(undefined);
 		deviceConfig.set(undefined);
 		service.set(undefined);
 	};
 
-	const getDevice = async (): Promise<BluetoothDevice> => {
-		console.log('Requesting Bluetooth Device...');
-		const d = await navigator.bluetooth.requestDevice({
-			filters: [{ namePrefix: 'BlueRetro' }],
-			optionalServices: [brUuid[0]]
-		});
-		return d;
-	};
-
-	const initDeviceConfiguration = async (s: BluetoothRemoteGATTService) => {
-		// await getOutputConfig(service);
-
-		const bluetoothAddress = await getBdAddr(s);
-		const appVersion = await getAppVersion(s);
-
-		const config: IDeviceConfig = {
-			bluetoothAddress,
-			appVersion
-			// globalConfig: await getGlobalConfig(service)
-		};
-
-		const app_ver_is_18x = appVersion.indexOf('v1.8') != -1;
-		const app_ver_bogus = appVersion.indexOf('v') == -1;
-		if (!app_ver_is_18x && !app_ver_bogus) {
-			config.appName = await getStringCmd(s, cfg_cmd_get_fw_name);
-			console.log(
-				'Connected to: ' +
-					config.appName +
-					' (' +
-					config.bluetoothAddress +
-					') [' +
-					config.appVersion +
-					']'
-			);
-		}
-		deviceConfig.set(config);
-		service.set(s);
-	};
-
-	const initializeDevice = async (dev: BluetoothDevice, retry: number = 0) => {
-		if (retry < maxConnectRetries) {
-			try {
-				const service = await getService(dev);
-				if (service) {
-					await initDeviceConfiguration(service);
-					sendToast('success', `Successfully connected to the BlueRetro service`);
-				} else {
-					sendToast('error', `Max connection reties reached: ${maxConnectRetries}`);
-				}
-			} catch (error) {
-				console.log('Error initializing device', error);
-				await initializeDevice(dev, retry + 1);
-			}
-		} else {
-			throw 'There was an error initializing the device max retries exceeded';
-		}
-	};
-
-	const selectDevice = async () => {
+	const initializeDevice = async () => {
 		isGettingService = true;
 		try {
-			const dev = await getDevice();
-			dev.gatt?.connected;
-			await initializeDevice(dev);
-			device.set(dev);
+			await getService();
+			sendToast('success', `Successfully connected to the BlueRetro service`);
+			isGettingService = false;
 		} catch (error) {
-			sendToast('error', `There was an error connecting to the device`);
-			console.log('Argh! ' + error);
+			console.log('Error initializing device', error);
+			sendToast('error', `Error initializing connection to BlueRetro device`);
+			isGettingService = false;
 		}
-		isGettingService = false;
 	};
 
 	const onMenuClick = () => {
@@ -169,7 +65,7 @@
 			$device.gatt.disconnect();
 		}
 		unselectDevice();
-		await selectDevice();
+		await initializeDevice();
 	};
 
 	const onDisconnectClick = async () => {
@@ -227,7 +123,7 @@
 	<svelte:fragment slot="sidebarLeft">
 		<NavigationMenu />
 	</svelte:fragment>
-	{#if !$device}
+	{#if !$isFullyInitialized}
 		<div class="p-4 flex gap-4 flex md:flex-row flex-col max-w-screen-md">
 			<div class="flex flex-col gap-4 flex-1">
 				{#if isGettingService}
@@ -241,7 +137,7 @@
 				{:else}
 					<div class="flex-col">
 						<div class="flex gap-4 items-center">
-							<button type="button" class="btn variant-filled" on:click={selectDevice}>
+							<button type="button" class="btn variant-filled" on:click={initializeDevice}>
 								Select Device
 							</button>
 						</div>

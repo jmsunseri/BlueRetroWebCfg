@@ -5,50 +5,94 @@
 		cfg_cmd_sys_factory,
 		cfg_cmd_sys_reset
 	} from '$lib/constants';
-	import { service } from '$lib/stores';
-	import { getSendToast } from '$lib/utilities';
-	import { getToastStore } from '@skeletonlabs/skeleton';
+	import { isFullyInitialized } from '$lib/stores';
+	import { getSendToast, getService } from '$lib/utilities';
+	import { getToastStore, ProgressRadial } from '@skeletonlabs/skeleton';
 
 	const sendToast = getSendToast(getToastStore());
+	let isDoingSomething = false;
+	let isSettingDeepSleep = false;
+	let isResetting = false;
+	let isFactoryResetting = false;
 
 	const setDeepSleep = async () => {
+		isDoingSomething = true;
+		isSettingDeepSleep = true;
 		try {
-			let chrc = await $service!.getCharacteristic(brUuid[7]);
+			const serv = await getService();
+			const chrc = await serv.getCharacteristic(brUuid[7]);
 			await chrc.writeValue(new Uint8Array([cfg_cmd_sys_deep_sleep]));
 			sendToast('success', 'Success puting device to sleep.');
 		} catch (error) {
 			sendToast('error', 'Hardware and firmware mismatch!');
 			console.log('error putting device to sleep', error);
 		}
+		isSettingDeepSleep = false;
+		isDoingSomething = false;
 	};
 
 	const setReset = async () => {
+		isDoingSomething = true;
+		isResetting = true;
 		try {
-			let chrc = await $service!.getCharacteristic(brUuid[7]);
+			const serv = await getService();
+			const chrc = await serv.getCharacteristic(brUuid[7]);
 			await chrc.writeValue(new Uint8Array([cfg_cmd_sys_reset]));
 			sendToast('success', 'Success resetting the device.');
 		} catch (error) {
 			sendToast('error', 'Error resetting the device!');
 			console.log('error resetting the device', error);
 		}
+		isResetting = false;
+		isDoingSomething = false;
 	};
 
 	const setFactoryReset = async () => {
+		isDoingSomething = true;
+		isFactoryResetting = true;
 		try {
-			let chrc = await $service!.getCharacteristic(brUuid[7]);
+			const serv = await getService();
+			const chrc = await serv.getCharacteristic(brUuid[7]);
 			await chrc.writeValue(new Uint8Array([cfg_cmd_sys_factory]));
 			sendToast('success', 'Success factory resetting the device.');
 		} catch (error) {
-			sendToast('error', 'Error fctory resetting the device!');
+			sendToast('error', 'Error factory resetting the device!');
 			console.log('error factory resetting the device', error);
 		}
+		isDoingSomething = false;
+		isFactoryResetting = false;
 	};
 </script>
 
 <div class="flex flex-col md:flex-row gap-4">
-	<button on:click={setDeepSleep} disabled={!$service} class="btn variant-ghost">Deep Sleep</button>
-	<button on:click={setReset} disabled={!$service} class="btn variant-ghost">Reset</button>
-	<button on:click={setFactoryReset} disabled={!$service} class="btn variant-ghost"
-		>Factory Reset</button
+	<button
+		on:click={setDeepSleep}
+		disabled={!$isFullyInitialized || isDoingSomething}
+		class="btn variant-ghost flex-row gap-4"
 	>
+		Deep Sleep
+		{#if isSettingDeepSleep}
+			<ProgressRadial width="w-6" />
+		{/if}
+	</button>
+	<button
+		on:click={setReset}
+		disabled={!$isFullyInitialized || isDoingSomething}
+		class="btn variant-ghost flex-row gap-4"
+	>
+		Reset
+		{#if isResetting}
+			<ProgressRadial width="w-6" />
+		{/if}
+	</button>
+	<button
+		on:click={setFactoryReset}
+		disabled={!$isFullyInitialized || isDoingSomething}
+		class="btn variant-ghost flex-row gap-4"
+	>
+		Factory Reset
+		{#if isFactoryResetting}
+			<ProgressRadial width="w-6" />
+		{/if}
+	</button>
 </div>

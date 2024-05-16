@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { service } from '$lib/stores';
+	import { service, isFullyInitialized } from '$lib/stores';
 	import { devCfg as outputModes, accCfg as accessories, maxOutput, brUuid } from '$lib/constants';
-	import { getSendToast } from '$lib/utilities';
-	import { getToastStore } from '@skeletonlabs/skeleton';
+	import { getSendToast, getService } from '$lib/utilities';
+	import { ProgressRadial, getToastStore } from '@skeletonlabs/skeleton';
 
 	let output: number = 0;
 	let accessory: number = 0;
@@ -12,12 +12,13 @@
 	const sendToast = getSendToast(getToastStore());
 
 	const loadOutputConfig = async () => {
+		isDoingSomething = true;
 		try {
-			isDoingSomething = true;
-			let chrc = await $service!.getCharacteristic(brUuid[2]);
+			const serv = await getService();
+			let chrc = await serv.getCharacteristic(brUuid[2]);
 			await chrc.writeValue(new Uint16Array([output]));
 
-			chrc = await $service!.getCharacteristic(brUuid[3]);
+			chrc = await serv.getCharacteristic(brUuid[3]);
 			const value = await chrc.readValue();
 
 			mode = value.getUint8(0);
@@ -36,24 +37,23 @@
 	};
 
 	const saveOutputConfig = async () => {
-		if ($service) {
-			isDoingSomething = true;
-			try {
-				var data = new Uint8Array([mode, accessory]);
-				let chrc = await $service.getCharacteristic(brUuid[2]);
+		const serv = await getService();
+		isDoingSomething = true;
+		try {
+			var data = new Uint8Array([mode, accessory]);
+			let chrc = await serv.getCharacteristic(brUuid[2]);
 
-				var outputCtrl = new Uint16Array([output]);
-				await chrc.writeValue(outputCtrl);
+			var outputCtrl = new Uint16Array([output]);
+			await chrc.writeValue(outputCtrl);
 
-				chrc = await $service.getCharacteristic(brUuid[3]);
-				await chrc.writeValue(data);
-				sendToast('success', `Success updating output ${output + 1}`);
-			} catch (error) {
-				console.log(`There was and error trying to save output ${output + 1}`, error);
-				sendToast('error', `There was an error trying to save output ${output + 1}!`);
-			}
-			isDoingSomething = false;
+			chrc = await serv.getCharacteristic(brUuid[3]);
+			await chrc.writeValue(data);
+			sendToast('success', `Success updating output ${output + 1}`);
+		} catch (error) {
+			console.log(`There was and error trying to save output ${output + 1}`, error);
+			sendToast('error', `There was an error trying to save output ${output + 1}!`);
 		}
+		isDoingSomething = false;
 	};
 </script>
 
@@ -63,7 +63,7 @@
 		class="select"
 		bind:value={output}
 		on:change={loadOutputConfig}
-		disabled={!$service || isDoingSomething}
+		disabled={!$isFullyInitialized || isDoingSomething}
 	>
 		{#each { length: maxOutput } as _, i}
 			<option value={i}>{i + 1}</option>
@@ -72,7 +72,7 @@
 </label>
 <label class="label">
 	<span>Mode</span>
-	<select class="select" bind:value={mode} disabled={!$service || isDoingSomething}>
+	<select class="select" bind:value={mode} disabled={!$isFullyInitialized || isDoingSomething}>
 		{#each outputModes as outputMode, i}
 			<option value={i}>{outputMode}</option>
 		{/each}
@@ -80,17 +80,20 @@
 </label>
 <label class="label">
 	<span>Accessories</span>
-	<select class="select" bind:value={accessory} disabled={!$service || isDoingSomething}>
+	<select class="select" bind:value={accessory} disabled={!$isFullyInitialized || isDoingSomething}>
 		{#each accessories as accessory, i}
 			<option value={i}>{accessory}</option>
 		{/each}
 	</select>
 </label>
 <button
-	disabled={!$service || isDoingSomething}
+	disabled={!$isFullyInitialized || isDoingSomething}
 	on:click={saveOutputConfig}
 	type="button"
-	class="btn variant-filled"
+	class="btn variant-filled flex-row gap-4"
 >
 	Save
+	{#if $isFullyInitialized && isDoingSomething}
+		<ProgressRadial width="w-6" />
+	{/if}
 </button>

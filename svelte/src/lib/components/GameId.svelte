@@ -5,11 +5,10 @@
 		cfg_cmd_set_default_cfg,
 		cfg_cmd_set_gameid_cfg
 	} from '$lib/constants';
-	import { deviceConfig } from '$lib/stores';
-	import { getGameId, getGameName, getSendToast } from '$lib/utilities';
+	import { deviceConfig, isFullyInitialized } from '$lib/stores';
+	import { getGameId, getGameName, getSendToast, getService } from '$lib/utilities';
 	import { RadioGroup, RadioItem, getToastStore } from '@skeletonlabs/skeleton';
 
-	export let service: BluetoothRemoteGATTService | undefined;
 	export let gameId: string;
 	let gameName: string;
 	let value: ControllerConfigType = 'global';
@@ -17,14 +16,16 @@
 	const sendToast = getSendToast(getToastStore());
 
 	const getConfigSource = async (): Promise<ControllerConfigType> => {
-		const cmd_chrc = await service!.getCharacteristic(brUuid[7]);
+		const serv = await getService();
+		const cmd_chrc = await serv.getCharacteristic(brUuid[7]);
 		await cmd_chrc.writeValue(new Uint8Array([cfg_cmd_get_cfg_src]));
 		const value = await cmd_chrc.readValue();
 		return value.getUint8(0) === 0 ? 'global' : 'gameid';
 	};
 
 	const setConfig = async (configValue: number) => {
-		const chrc = await service!.getCharacteristic(brUuid[7]);
+		const serv = await getService();
+		const chrc = await serv.getCharacteristic(brUuid[7]);
 		await chrc.writeValue(new Uint8Array([configValue]));
 	};
 
@@ -39,12 +40,13 @@
 	const onChange = async () => {
 		if (value === 'gameid') {
 			try {
+				const serv = await getService();
 				await setGameIdConfig();
 				deviceConfig.update((c) => ({
 					...c,
 					source: 'gameid'
 				}));
-				gameId = await getGameId(service!);
+				gameId = await getGameId(serv);
 				console.log('game id detected: ', gameId);
 				gameName = (await getGameName(gameId))?.toString() || '';
 				console.log('game name: ', gameName);
@@ -90,14 +92,14 @@
 			on:change={onChange}
 			name="justify"
 			value={'global'}
-			disabled={!service}>Global</RadioItem
+			disabled={!isFullyInitialized}>Global</RadioItem
 		>
 		<RadioItem
 			bind:group={value}
 			on:change={onChange}
 			name="justify"
 			value={'gameid'}
-			disabled={!service}>Game ID</RadioItem
+			disabled={!isFullyInitialized}>Game ID</RadioItem
 		>
 	</RadioGroup>
 	{#if gameName}

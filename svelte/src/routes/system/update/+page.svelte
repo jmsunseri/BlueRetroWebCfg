@@ -8,7 +8,7 @@
 		mtu,
 		urlLatestRelease
 	} from '$lib/constants';
-	import { device, deviceConfig } from '$lib/stores';
+	import { device, deviceConfig, service } from '$lib/stores';
 	import { FileButton, getToastStore } from '@skeletonlabs/skeleton';
 	import { getSendToast, getService } from '$lib/utilities';
 	import { UploadProgress } from '$lib/components';
@@ -39,6 +39,7 @@
 	) => {
 		if (isCanceling) {
 			isCanceling = false;
+			isDoingSomething = false;
 			throw new Error('Cancelled');
 		}
 		progress = Math.round((offset / data.byteLength) * 100);
@@ -71,41 +72,41 @@
 	};
 
 	const onWriteClick = async () => {
-		if ($device) {
-			try {
-				isDoingSomething = true;
-				const service = await getService($device);
-
-				const reader = new FileReader();
-				reader.onabort = (_) => {
-					console.log('File read cancelled');
-				};
-				reader.onload = async (_) => {
-					if (reader.result) {
-						var decoder = new TextDecoder('utf-8');
-						var header = decoder.decode(reader.result.slice(0, 256) as ArrayBuffer);
-						let isNewFirmwareFileHw2 = header.indexOf('hw2') != -1;
-						if (isHw2 == isNewFirmwareFileHw2) {
-							await otaWriteFirmware(service, reader.result as ArrayBuffer);
-							sendToast('success', 'Success updating firmware');
-							device.set(undefined);
-						} else {
-							sendToast('error', 'Hardware and firmware mismatch!');
-						}
+		try {
+			isDoingSomething = true;
+			const serv = await getService();
+			const reader = new FileReader();
+			reader.onabort = (_) => {
+				console.log('File read cancelled');
+			};
+			reader.onload = async (_) => {
+				if (reader.result) {
+					var decoder = new TextDecoder('utf-8');
+					var header = decoder.decode(reader.result.slice(0, 256) as ArrayBuffer);
+					let isNewFirmwareFileHw2 = header.indexOf('hw2') != -1;
+					if (isHw2 == isNewFirmwareFileHw2) {
+						await otaWriteFirmware(serv, reader.result as ArrayBuffer);
+						sendToast('success', 'Success updating firmware');
+						device.set(undefined);
+					} else {
+						sendToast('error', 'Hardware and firmware mismatch!');
 					}
+				}
 
-					isDoingSomething = false;
-					progress = 0;
-					$device.gatt?.disconnect();
-				};
-
-				// Read in the image file as a binary string.
-				reader.readAsArrayBuffer(files[0]);
-			} catch {
-				sendToast('error', 'There was an error updating the firmware!');
 				isDoingSomething = false;
 				progress = 0;
-			}
+				$device?.gatt?.disconnect();
+				device.set(undefined);
+				deviceConfig.set(undefined);
+				service.set(undefined);
+			};
+
+			// Read in the image file as a binary string.
+			reader.readAsArrayBuffer(files[0]);
+		} catch {
+			sendToast('error', 'There was an error updating the firmware!');
+			isDoingSomething = false;
+			progress = 0;
 		}
 	};
 
@@ -139,4 +140,4 @@
 		Write</button
 	>
 </div>
-<UploadProgress max={100} onCancelClick={cancelClick} {progress} />
+<UploadProgress max={100} onCancelClick={cancelClick} {progress} {isDoingSomething} />

@@ -1,16 +1,17 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { btn, maxMainInput } from '$lib/constants';
-	import { service } from '$lib/stores';
+	import { isFullyInitialized } from '$lib/stores';
 	import type { IPreset, IPresetFile } from '$lib/interfaces';
-	import { getSendToast, writeInputConfig } from '$lib/utilities';
+	import { getSendToast, getService, writeInputConfig } from '$lib/utilities';
 	import { GameId } from '$lib/components';
-	import { getToastStore } from '@skeletonlabs/skeleton';
+	import { ProgressRadial, getToastStore } from '@skeletonlabs/skeleton';
 
 	const consoles: { [key: string]: IPreset[] } = {};
 	let preset: IPreset | undefined = undefined;
 	let konsole: string | undefined = undefined;
 	let input: number = 0;
+	let isDoingSomething = false;
 	let gameId: string;
 
 	const sendToast = getSendToast(getToastStore());
@@ -32,7 +33,8 @@
 
 	const savePresetInput = async () => {
 		const btnMap: { [key: string]: number } = btn;
-		if (preset && $service) {
+		isDoingSomething = true;
+		if (preset && $isFullyInitialized) {
 			var nbMapping = preset.map.length;
 			var cfgSize = nbMapping * 8 + 3;
 			var cfg = new Uint8Array(cfgSize);
@@ -52,28 +54,36 @@
 			}
 
 			try {
-				await writeInputConfig(input, cfg, $service);
+				await writeInputConfig(input, cfg, await getService());
 				sendToast('success', 'Success updating output configuration!');
 			} catch (error) {
 				console.log('there was an error writing your preset configuration', error);
 				sendToast('error', 'There was an error saving ');
 			}
 		}
+		isDoingSomething = false;
 	};
 
 	onMount(async () => {
-		const configFiles = await getFiles();
-		await fetchMap(configFiles);
+		isDoingSomething = true;
+		try {
+			const configFiles = await getFiles();
+			await fetchMap(configFiles);
+		} catch (error) {
+			console.log('there was an error fetching the presets', error);
+			sendToast('error', 'There was an error fetching the presets');
+		}
+		isDoingSomething = false;
 	});
 
 	$: saveButtonEnabled = preset;
 </script>
 
-<GameId service={$service} bind:gameId />
+<GameId bind:gameId />
 
 <label class="label">
 	<span>Input #</span>
-	<select class="select" bind:value={input}>
+	<select class="select" bind:value={input} disabled={!$isFullyInitialized || isDoingSomething}>
 		{#each { length: maxMainInput } as _, i}
 			<option value={i}>{i + 1}</option>
 		{/each}
@@ -88,7 +98,7 @@
 		on:change={() => {
 			preset = undefined;
 		}}
-		disabled={!$service}
+		disabled={!$isFullyInitialized || isDoingSomething}
 	>
 		{#each Object.keys(consoles) as console}
 			<option value={console}>{console}</option>
@@ -98,7 +108,7 @@
 
 <label class="label">
 	<span>Preset</span>
-	<select class="select" bind:value={preset} disabled={!$service}>
+	<select class="select" bind:value={preset} disabled={!$isFullyInitialized || isDoingSomething}>
 		{#if konsole}
 			{#each consoles[konsole] as preset}
 				<option value={preset}>{preset.name}</option>
@@ -110,8 +120,11 @@
 <button
 	on:click={savePresetInput}
 	type="button"
-	class="btn variant-filled"
-	disabled={!saveButtonEnabled || !$service}
+	class="btn variant-filled flex-row gap-4"
+	disabled={!saveButtonEnabled || !$isFullyInitialized || isDoingSomething}
 >
 	Save
+	{#if $isFullyInitialized && isDoingSomething}
+		<ProgressRadial width="w-6" />
+	{/if}
 </button>

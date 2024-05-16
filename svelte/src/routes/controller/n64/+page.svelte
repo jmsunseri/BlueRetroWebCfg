@@ -1,13 +1,16 @@
 <script lang="ts">
-	import { FileButton, getToastStore } from '@skeletonlabs/skeleton';
+	import { FileButton, ProgressRadial, getToastStore } from '@skeletonlabs/skeleton';
 	import { block, brUuid, mtu, pakSize } from '$lib/constants';
-	import { downloadFile, getSendToast } from '$lib/utilities';
-	import { service } from '$lib/stores';
+	import { downloadFile, getSendToast, getService } from '$lib/utilities';
+	import { isFullyInitialized } from '$lib/stores';
 	import { UploadProgress } from '$lib/components';
 
 	let pakNumber = 0;
 	let progress = 0;
 	let isDoingSomething = false;
+	let isReading = false;
+	let isWriting = false;
+	let isFormatting = false;
 	let isCanceling = false;
 	let files: FileList;
 
@@ -93,11 +96,12 @@
 	};
 
 	const n64ReadFile = async (pak: number) => {
+		const serv = await getService();
 		var data = new Uint8Array(pakSize);
 		var offset = new Uint32Array([Number(pak) * pakSize]);
-		let ctrl_chrc = await $service!.getCharacteristic(brUuid[10]);
+		let ctrl_chrc = await serv.getCharacteristic(brUuid[10]);
 		ctrl_chrc.writeValue(offset);
-		const chrc = await $service!.getCharacteristic(brUuid[11]);
+		const chrc = await serv.getCharacteristic(brUuid[11]);
 		await n64ReadFileRecursive(chrc, data, 0);
 		offset[0] = 0;
 		ctrl_chrc.writeValue(offset);
@@ -128,22 +132,21 @@
 	};
 
 	const n64WriteFile = async (data: ArrayBuffer, pak: number) => {
-		const chrc = await $service!.getCharacteristic(brUuid[10]);
+		const serv = await getService();
+		const chrc = await serv.getCharacteristic(brUuid[10]);
 		const offset = new Uint32Array([Number(pak) * pakSize]);
 		await chrc.writeValue(offset);
-		const chrc2 = await $service!.getCharacteristic(brUuid[11]);
+		const chrc2 = await serv.getCharacteristic(brUuid[11]);
 		await n64WriteRecursive(chrc2, data, 0);
 		offset[0] = 0;
 		await chrc.writeValue(offset);
 	};
 
 	const onReadClick = async () => {
+		isReading = true;
+		isDoingSomething = true;
 		try {
-			isDoingSomething = true;
 			const data = await n64ReadFile(pakNumber);
-			isDoingSomething = false;
-			progress = 0;
-
 			downloadFile(
 				new Blob([data.buffer], { type: 'application/mpk' }),
 				`ctrl_pak-${pakNumber + 1}.mpk`
@@ -151,14 +154,16 @@
 			sendToast('success', 'Success reading controller pak');
 		} catch (error) {
 			sendToast('error', 'There was an error reading the controller pak!');
-			isDoingSomething = false;
-			progress = 0;
 		}
+		isDoingSomething = false;
+		isReading = false;
+		progress = 0;
 	};
 
 	const onWriteClick = async () => {
+		isDoingSomething = true;
+		isWriting = true;
 		try {
-			isDoingSomething = true;
 			const reader = new FileReader();
 			reader.onabort = (_) => {
 				console.log('File write cancelled');
@@ -170,6 +175,7 @@
 				}
 				sendToast('success', 'Success writing');
 				isDoingSomething = false;
+				isWriting = false;
 				progress = 0;
 			};
 
@@ -178,22 +184,23 @@
 		} catch {
 			sendToast('error', 'There was an error writing!');
 			isDoingSomething = false;
+			isWriting = false;
 			progress = 0;
 		}
 	};
 
 	const onFormatClick = async () => {
+		isDoingSomething = true;
+		isFormatting = true;
 		try {
-			isDoingSomething = true;
 			await n64WriteFile(makeFormattedPak().buffer, pakNumber);
 			sendToast('success', 'Success formatting');
-			isDoingSomething = false;
-			progress = 0;
 		} catch (error) {
 			sendToast('error', 'There was an error formatting!');
-			isDoingSomething = false;
-			progress = 0;
 		}
+		isDoingSomething = false;
+		isFormatting = false;
+		progress = 0;
 	};
 
 	const cancelClick = () => {
@@ -214,26 +221,32 @@
 	<div class="flex md:flex-row gap-4 md:items-center flex-col">
 		<button
 			on:click={onReadClick}
-			class="btn variant-ghost"
-			disabled={isDoingSomething || !$service}
+			class="btn variant-ghost flex-row gap-4"
+			disabled={isDoingSomething || !$isFullyInitialized}
 		>
 			Read
+			{#if $isFullyInitialized && isReading}
+				<ProgressRadial width="w-6" />
+			{/if}
 		</button>
 
 		<button
 			on:click={onFormatClick}
-			class="btn variant-ghost"
-			disabled={isDoingSomething || !$service}
+			class="btn variant-ghost flex-row gap-4"
+			disabled={isDoingSomething || !$isFullyInitialized}
 		>
 			Format
+			{#if $isFullyInitialized && isFormatting}
+				<ProgressRadial width="w-6" />
+			{/if}
 		</button>
 
 		<div class="flex flex-row items-center gap-4">
 			<FileButton
 				name="files"
 				bind:files
-				button="btn variant-ghost"
-				disabled={isDoingSomething || !$service}>Upload</FileButton
+				button="btn variant-ghost flex-row gap-4"
+				disabled={isDoingSomething || !$isFullyInitialized}>Upload</FileButton
 			>
 
 			<p>Select .MPK file to write</p>
@@ -241,11 +254,14 @@
 
 		<button
 			on:click={onWriteClick}
-			class="btn variant-ghost"
-			disabled={isDoingSomething || !$service || !files?.length}
+			class="btn variant-ghost flex-row gap-4"
+			disabled={isDoingSomething || !$isFullyInitialized || !files?.length}
 		>
-			Write</button
-		>
+			Write
+			{#if $isFullyInitialized && isWriting}
+				<ProgressRadial width="w-6" />
+			{/if}
+		</button>
 	</div>
 	<UploadProgress max={100} onCancelClick={cancelClick} {progress} />
 

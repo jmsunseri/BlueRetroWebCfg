@@ -3,9 +3,9 @@
 	import type { IButtonMapping } from '$lib/interfaces';
 	import { IconPlus, IconDeviceFloppy } from '@tabler/icons-svelte';
 	import { maxMainInput, labelName as deviceLabels, brUuid, maxMappings } from '$lib/constants';
-	import { service } from '$lib/stores';
-	import { getSendToast, writeInputConfig } from '$lib/utilities';
-	import { getToastStore } from '@skeletonlabs/skeleton';
+	import { isFullyInitialized } from '$lib/stores';
+	import { getSendToast, getService, writeInputConfig } from '$lib/utilities';
+	import { ProgressRadial, getToastStore } from '@skeletonlabs/skeleton';
 
 	let source: number = 0;
 	let input: number;
@@ -27,32 +27,34 @@
 	};
 
 	const loadInputConfiguration = async (inputNumber: number) => {
-		try {
-			isDoingSomething = true;
-			const config = await readInputConfiguration(inputNumber);
-			let offset = 3;
-			buttonMappings = new Array<IButtonMapping | undefined>(config[2]).fill({}).map((_) => ({
-				source: config[offset++],
-				destination: config[offset++],
-				destinationId: config[offset++],
-				max: config[offset++],
-				threshold: config[offset++],
-				deadzone: config[offset++],
-				turbo: config[offset++],
-				scaling: config[offset],
-				diagonal: config[offset++] >> 4
-			}));
-		} catch (error) {
-			console.log(
-				`there was an error fetching button mappings for input ${inputNumber + 1}`,
-				error
-			);
-			sendToast(
-				'error',
-				`There was an error fetching button mappings for input ${inputNumber + 1}`
-			);
+		if (!isNaN(inputNumber)) {
+			try {
+				isDoingSomething = true;
+				const config = await readInputConfiguration(inputNumber);
+				let offset = 3;
+				buttonMappings = new Array<IButtonMapping | undefined>(config[2]).fill({}).map((_) => ({
+					source: config[offset++],
+					destination: config[offset++],
+					destinationId: config[offset++],
+					max: config[offset++],
+					threshold: config[offset++],
+					deadzone: config[offset++],
+					turbo: config[offset++],
+					scaling: config[offset],
+					diagonal: config[offset++] >> 4
+				}));
+			} catch (error) {
+				console.log(
+					`there was an error fetching button mappings for input ${inputNumber + 1}`,
+					error
+				);
+				sendToast(
+					'error',
+					`There was an error fetching button mappings for input ${inputNumber + 1}`
+				);
+			}
+			isDoingSomething = false;
 		}
-		isDoingSomething = false;
 	};
 
 	const readRecursive = async (
@@ -92,7 +94,8 @@
 		});
 
 		try {
-			await writeInputConfig(input, config, $service!);
+			const serv = await getService();
+			await writeInputConfig(input, config, serv);
 			sendToast('success', 'Success updating output configuration!');
 		} catch (error) {
 			console.log('there was an error writing your preset configuration', error);
@@ -102,21 +105,22 @@
 	};
 
 	const readInputConfiguration = async (inputNumber: number) => {
+		const serv = await getService();
 		const config = new Uint8Array(2051);
-		const ctrl_chrc = await $service!.getCharacteristic(brUuid[4]);
-		const data_chrc = await $service!.getCharacteristic(brUuid[5]);
+		const ctrl_chrc = await serv.getCharacteristic(brUuid[4]);
+		const data_chrc = await serv.getCharacteristic(brUuid[5]);
 		const inputCtrl = new Uint16Array([inputNumber, 0]);
 		return await readRecursive(config, inputCtrl, ctrl_chrc, data_chrc);
 	};
 
 	$: {
-		if ($service && buttonMappings.length === 0) {
+		if ($isFullyInitialized && buttonMappings.length === 0 && !isDoingSomething) {
 			loadInputConfiguration(input);
 		}
 	}
 </script>
 
-<GameId service={$service} bind:gameId />
+<GameId bind:gameId />
 
 <div class="flex md:flex-row flex-col gap-4">
 	<label class="label">
@@ -146,8 +150,17 @@
 	</label>
 </div>
 
-<button disabled={!$service} class="btn variant-filled" on:click={writeConfiguration}>
-	Save Mappings <IconDeviceFloppy />
+<button
+	disabled={!$isFullyInitialized}
+	class="btn variant-filled flex-row gap-4"
+	on:click={writeConfiguration}
+>
+	Save Mappings
+	{#if $isFullyInitialized && isDoingSomething}
+		<ProgressRadial width="w-6" />
+	{:else}
+		<IconDeviceFloppy />
+	{/if}
 </button>
 
 {#if buttonMappings.length}
@@ -170,6 +183,10 @@
 	{/each}
 {/if}
 
-<button disabled={!$service} class="btn variant-ghost-tertiary" on:click={addMapping}>
+<button
+	disabled={!$isFullyInitialized}
+	class="btn variant-ghost-tertiary flex-row gap-4"
+	on:click={addMapping}
+>
 	Add Mapping <IconPlus />
 </button>
