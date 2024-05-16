@@ -60,7 +60,7 @@ const getService = async (retry: number = 0): Promise<BluetoothRemoteGATTService
             return serv;
         } catch (error) {
             if (dev) {
-                console.log('Error trying to establish connection to GATT service retrying...')
+                console.log('Error trying to establish connection to GATT service retrying...', error)
                 return await getService(retry + 1);
             }
 
