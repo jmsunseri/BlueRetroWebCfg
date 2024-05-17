@@ -7,17 +7,15 @@ const getAppVersion = async (service: BluetoothRemoteGATTService) => {
     let enc = new TextDecoder('utf-8');
     let app_ver = enc.decode(await charactristics.readValue());
     console.log('App Version: ', app_ver);
-
     return app_ver;
 };
 
 const getAppName = async (service: BluetoothRemoteGATTService, command: number) => {
     console.log('Reading App Name...');
     var cmd = new Uint8Array(1);
-
     var cmd_chrc = await service.getCharacteristic(brUuid[7]);
     cmd[0] = command;
-    cmd_chrc.writeValue(cmd);
+    await cmd_chrc.writeValue(cmd);
     const dataview = await cmd_chrc.readValue();
     let enc = new TextDecoder('utf-8');
     let commandString = enc.decode(dataview);
