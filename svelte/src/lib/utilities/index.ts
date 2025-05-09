@@ -4,7 +4,16 @@ import { getDevice } from "./getDevice";
 import { getGameId } from "./getGameId";
 import { getGameName } from "./getGameName";
 import { getService } from "./getService";
-import { getSendToast } from "./sendToast";
 import { writeInputConfig } from "./writeInputConfig";
+import { toaster } from "./toaster-svelte";
 
-export { getService, downloadFile, getGameName, writeInputConfig, getGameId, getSendToast, getDeviceConfiguration, getDevice }
+export { 
+    getService, 
+    downloadFile, 
+    getGameName, 
+    writeInputConfig, 
+    getGameId, 
+    getDeviceConfiguration, 
+    getDevice, 
+    toaster
+}

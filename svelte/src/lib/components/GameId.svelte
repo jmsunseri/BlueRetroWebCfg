@@ -6,8 +6,8 @@
 		cfg_cmd_set_gameid_cfg
 	} from '$lib/constants';
 	import { deviceConfig, isFullyInitialized } from '$lib/stores';
-	import { getGameId, getGameName, getSendToast, getService } from '$lib/utilities';
-	import { RadioGroup, RadioItem, getToastStore } from '@skeletonlabs/skeleton';
+	import { getGameId, getGameName, toaster, getService } from '$lib/utilities';
+	import { Segment } from '@skeletonlabs/skeleton-svelte';
 
 	interface Props {
 		gameId: string;
@@ -17,7 +17,6 @@
 	let gameName: string | undefined = $state();
 	let value: ControllerConfigType = $state('global');
 
-	const sendToast = getSendToast(getToastStore());
 
 	const getConfigSource = async (): Promise<ControllerConfigType> => {
 		const serv = await getService();
@@ -56,7 +55,7 @@
 				console.log('game name: ', gameName);
 			} catch (error) {
 				console.log('there was an error switching to gameid mode', error);
-				sendToast('error', 'There was an error switching to gameid mode ');
+				toaster.error({ title: 'There was an error switching to gameid mode'});
 			}
 		} else {
 			try {
@@ -69,7 +68,7 @@
 				gameName = '';
 			} catch (error) {
 				console.log('there was an error switching to global mode', error);
-				sendToast('error', 'There was an error switching to global mode ');
+				toaster.error({ title: 'There was an error switching to global mode'});
 			}
 		}
 	};
@@ -86,26 +85,26 @@
 	<label class="label">
 		<span>Config</span>
 	</label>
-	<RadioGroup
-		active="variant-filled-primary"
-		hover="hover:variant-soft-primary"
-		rounded="rounded-token"
+	<Segment
+		active="preset-filled-primary-500"
+		hover="hover:preset-tonal-primary"
+		rounded="rounded-base"
 	>
-		<RadioItem
+		<Segment.Item
 			bind:group={value}
 			on:change={onChange}
 			name="justify"
 			value={'global'}
-			disabled={!isFullyInitialized}>Global</RadioItem
+			disabled={!isFullyInitialized}>Global</Segment.Item
 		>
-		<RadioItem
+		<Segment.Item
 			bind:group={value}
 			on:change={onChange}
 			name="justify"
 			value={'gameid'}
-			disabled={!isFullyInitialized}>Game ID</RadioItem
+			disabled={!isFullyInitialized}>Game ID</Segment.Item
 		>
-	</RadioGroup>
+	</Segment>
 	{#if gameName}
 		<p class="text-sm">
 			You are editing the controller configuration for the game {gameName}

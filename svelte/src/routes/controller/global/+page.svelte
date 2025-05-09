@@ -9,8 +9,8 @@
 		brUuid
 	} from '$lib/constants';
 	import type { IGlobalConfig } from '$lib/interfaces';
-	import { getSendToast, getService } from '$lib/utilities';
-	import { ProgressRadial, getToastStore } from '@skeletonlabs/skeleton';
+	import { getService, toaster } from '$lib/utilities';
+	import { ProgressRing } from '@skeletonlabs/skeleton-svelte';
 
 	let system: number = $state(0);
 	let multitap: number = $state(0);
@@ -18,8 +18,6 @@
 	let bank: number | undefined = $state();
 
 	let isDoingSomething = $state(false);
-
-	const sendToast = getSendToast(getToastStore());
 
 	const getApiVersion = async () => {
 		console.log('Reading Api version...');
@@ -60,7 +58,7 @@
 			bank = globalConfig.bank;
 		} catch (error) {
 			console.log('there was an error getting your current global config', error);
-			sendToast('error', 'There was an error getting your current global config');
+			toaster.error({ title: 'There was an error getting your current global config'});
 		}
 
 		isDoingSomething = false;
@@ -106,11 +104,11 @@
 						inquiryMode
 					}
 				}));
+				toaster.success({ title: 'Success updating global configuration!'});
 
-				sendToast('success', 'Success updating global configuration!');
 			} catch (error) {
 				console.log('there was an error saving the global config', error);
-				sendToast('error', 'There was an error saving the global config');
+				toaster.error({ title: 'There was an error saving the global config'});
 			}
 		}
 		isDoingSomething = false;
@@ -153,11 +151,11 @@
 <button
 	disabled={!$isFullyInitialized || isDoingSomething}
 	type="button"
-	class="btn variant-filled flex-row gap-4"
+	class="btn preset-filled flex-row gap-4"
 	onclick={saveGlobal}
 >
 	Save
 	{#if $isFullyInitialized && isDoingSomething}
-		<ProgressRadial width="w-6" />
+		<ProgressRing width="w-6" />
 	{/if}
 </button>

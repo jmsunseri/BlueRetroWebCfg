@@ -6,17 +6,15 @@
 	import { IconPlus, IconDeviceFloppy } from '@tabler/icons-svelte';
 	import { maxMainInput, labelName as deviceLabels, brUuid, maxMappings } from '$lib/constants';
 	import { isFullyInitialized } from '$lib/stores';
-	import { getSendToast, getService, writeInputConfig } from '$lib/utilities';
-	import { ProgressRadial, getToastStore } from '@skeletonlabs/skeleton';
+	import { getService, toaster, writeInputConfig } from '$lib/utilities';
+	import { ProgressRing } from '@skeletonlabs/skeleton-svelte';
 
 	let source: number = $state(0);
-	let input: number = $state();
+	let input: number = $state(0);
 	let destination: number = $state(0);
 	let buttonMappings: Array<IButtonMapping> = $state([]);
-	let gameId: string = $state();
+	let gameId: string = $state('');
 	let isDoingSomething = $state(false);
-
-	const sendToast = getSendToast(getToastStore());
 
 	const removeMapping = (index: number) => {
 		buttonMappings = buttonMappings.filter((_, i) => index != i);
@@ -50,10 +48,7 @@
 					`there was an error fetching button mappings for input ${inputNumber + 1}`,
 					error
 				);
-				sendToast(
-					'error',
-					`There was an error fetching button mappings for input ${inputNumber + 1}`
-				);
+				toaster.error({ title: `There was an error fetching button mappings for input ${inputNumber + 1}`});
 			}
 			isDoingSomething = false;
 		}
@@ -98,10 +93,10 @@
 		try {
 			const serv = await getService();
 			await writeInputConfig(input, config, serv);
-			sendToast('success', 'Success updating output configuration!');
+			toaster.success({ title: 'Success updating output configuration!'});
 		} catch (error) {
 			console.log('there was an error writing your preset configuration', error);
-			sendToast('error', 'There was an error saving ');
+			toaster.error({ title: 'There was an error saving '});
 		}
 		isDoingSomething = false;
 	};
@@ -115,7 +110,8 @@
 		return await readRecursive(config, inputCtrl, ctrl_chrc, data_chrc);
 	};
 
-	run(() => {
+	
+	$effect.pre(() => {
 		if ($isFullyInitialized && buttonMappings.length === 0 && !isDoingSomething) {
 			loadInputConfiguration(input);
 		}
@@ -154,12 +150,12 @@
 
 <button
 	disabled={!$isFullyInitialized}
-	class="btn variant-filled flex-row gap-4"
+	class="btn preset-filled flex-row gap-4"
 	onclick={writeConfiguration}
 >
 	Save Mappings
 	{#if $isFullyInitialized && isDoingSomething}
-		<ProgressRadial width="w-6" />
+		<ProgressRing width="w-6" />
 	{:else}
 		<IconDeviceFloppy />
 	{/if}
@@ -187,7 +183,7 @@
 
 <button
 	disabled={!$isFullyInitialized}
-	class="btn variant-ghost-tertiary flex-row gap-4"
+	class="btn preset-tonal-tertiary border border-tertiary-500 flex-row gap-4"
 	onclick={addMapping}
 >
 	Add Mapping <IconPlus />

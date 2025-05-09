@@ -9,8 +9,8 @@
 		urlLatestRelease
 	} from '$lib/constants';
 	import { device, deviceConfig, service } from '$lib/stores';
-	import { FileButton, getToastStore } from '@skeletonlabs/skeleton';
-	import { getSendToast, getService } from '$lib/utilities';
+	import { FileUpload } from '@skeletonlabs/skeleton-svelte';
+	import { toaster, getService } from '$lib/utilities';
 	import { UploadProgress } from '$lib/components';
 
 	let latestVersion: string | undefined = $state();
@@ -18,8 +18,6 @@
 	let progress = $state(0);
 	let isCanceling = false;
 	let files: FileList | undefined = $state();
-
-	const sendToast = getSendToast(getToastStore());
 
 	onMount(async () => {
 		const response = await fetch(urlLatestRelease);
@@ -72,43 +70,43 @@
 	};
 
 	const onWriteClick = async () => {
-		try {
-			isDoingSomething = true;
-			const serv = await getService();
-			const reader = new FileReader();
-			reader.onabort = (_) => {
-				console.log('File read cancelled');
-			};
-			reader.onload = async (_) => {
-				if (reader.result) {
-					var decoder = new TextDecoder('utf-8');
-					var header = decoder.decode(reader.result.slice(0, 256) as ArrayBuffer);
-					let isNewFirmwareFileHw2 = header.indexOf('hw2') != -1;
-					if (isHw2 == isNewFirmwareFileHw2) {
-						await otaWriteFirmware(serv, reader.result as ArrayBuffer);
-						sendToast('success', 'Success updating firmware');
-						device.set(undefined);
-					} else {
-						sendToast('error', 'Hardware and firmware mismatch!');
+		if(files?.length) {
+			try {
+				isDoingSomething = true;
+				const serv = await getService();
+				const reader = new FileReader();
+				reader.onabort = (_) => {
+					console.log('File read cancelled');
+				};
+				reader.onload = async (_) => {
+					if (reader.result) {
+						var decoder = new TextDecoder('utf-8');
+						var header = decoder.decode(reader.result.slice(0, 256) as ArrayBuffer);
+						let isNewFirmwareFileHw2 = header.indexOf('hw2') != -1;
+						if (isHw2 == isNewFirmwareFileHw2) {
+							await otaWriteFirmware(serv, reader.result as ArrayBuffer);
+							toaster.success({ title: 'Success updating firmware'});
+							device.set(undefined);
+						} else {
+							toaster.error({ title: 'Hardware and firmware mismatch!'});
+						}
 					}
-				}
 
+					isDoingSomething = false;
+					progress = 0;
+					$device?.gatt?.disconnect();
+					device.set(undefined);
+					deviceConfig.set(undefined);
+					service.set(undefined);
+				};
+
+				// Read in the image file as a binary string.
+				reader.readAsArrayBuffer(files[0]);
+			} catch {
+				toaster.error({ title: 'There was an error updating the firmware!'});
 				isDoingSomething = false;
 				progress = 0;
-				$device?.gatt?.disconnect();
-				device.set(undefined);
-				deviceConfig.set(undefined);
-				service.set(undefined);
-			};
-
-			// Read in the image file as a binary string.
-			if(files && files.length) {
-				reader.readAsArrayBuffer(files[0]);
 			}
-		} catch {
-			sendToast('error', 'There was an error updating the firmware!');
-			isDoingSomething = false;
-			progress = 0;
 		}
 	};
 
@@ -124,11 +122,11 @@
 
 <div class="flex md:flex-row gap-4 md:items-center flex-col">
 	<div class="flex flex-row items-center gap-4">
-		<FileButton
+		<FileUpload
 			name="files"
 			bind:files
-			button="btn variant-ghost"
-			disabled={isDoingSomething || !$device}>Upload</FileButton
+			button="btn preset-tonal border border-surface-500"
+			disabled={isDoingSomething || !$device}>Upload</FileUpload
 		>
 
 		<p>Select firmware .bin</p>
@@ -136,7 +134,7 @@
 
 	<button
 		onclick={onWriteClick}
-		class="btn variant-ghost"
+		class="btn preset-tonal border border-surface-500"
 		disabled={isDoingSomething || !$device || !files?.length}
 	>
 		Write</button

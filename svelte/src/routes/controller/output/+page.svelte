@@ -1,15 +1,13 @@
 <script lang="ts">
 	import { service, isFullyInitialized } from '$lib/stores';
 	import { devCfg as outputModes, accCfg as accessories, maxOutput, brUuid } from '$lib/constants';
-	import { getSendToast, getService } from '$lib/utilities';
-	import { ProgressRadial, getToastStore } from '@skeletonlabs/skeleton';
+	import { getService, toaster } from '$lib/utilities';
+	import { ProgressRing } from '@skeletonlabs/skeleton-svelte';
 
 	let output: number = $state(0);
 	let accessory: number = $state(0);
 	let mode: number = $state(0);
 	let isDoingSomething = $state(false);
-
-	const sendToast = getSendToast(getToastStore());
 
 	const loadOutputConfig = async () => {
 		isDoingSomething = true;
@@ -28,10 +26,7 @@
 				`There was and error trying to retrieve your configuration for output ${output + 1}`,
 				error
 			);
-			sendToast(
-				'error',
-				`There was an error trying to retrieve your configuration for output ${output + 1}!`
-			);
+			toaster.error({ title: `There was an error trying to retrieve your configuration for output ${output + 1}!`});
 		}
 		isDoingSomething = false;
 	};
@@ -48,10 +43,10 @@
 
 			chrc = await serv.getCharacteristic(brUuid[3]);
 			await chrc.writeValue(data);
-			sendToast('success', `Success updating output ${output + 1}`);
+			toaster.error({ title: `Success updating output ${output + 1}`});
 		} catch (error) {
 			console.log(`There was and error trying to save output ${output + 1}`, error);
-			sendToast('error', `There was an error trying to save output ${output + 1}!`);
+			toaster.error({ title: `There was an error trying to save output ${output + 1}!`});
 		}
 		isDoingSomething = false;
 	};
@@ -90,10 +85,10 @@
 	disabled={!$isFullyInitialized || isDoingSomething}
 	onclick={saveOutputConfig}
 	type="button"
-	class="btn variant-filled flex-row gap-4"
+	class="btn preset-filled flex-row gap-4"
 >
 	Save
 	{#if $isFullyInitialized && isDoingSomething}
-		<ProgressRadial width="w-6" />
+		<ProgressRing width="w-6" />
 	{/if}
 </button>

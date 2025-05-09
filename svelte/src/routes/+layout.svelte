@@ -1,18 +1,8 @@
 <script lang="ts">
 	import '../app.postcss';
 	import {
-		AppShell,
 		AppBar,
-		ProgressRadial,
-		Drawer,
-		Toast,
-		storePopup,
-		initializeStores,
-		getDrawerStore,
-		getToastStore,
-		popup,
-		type PopupSettings
-	} from '@skeletonlabs/skeleton';
+		type PopupSettings, ProgressRing, ToastProvider } from '@skeletonlabs/skeleton-svelte';
 	import {
 		IconBrandGithub,
 		IconBrandDiscord,
@@ -21,7 +11,9 @@
 	} from '@tabler/icons-svelte';
 	import { deviceConfig, device, service, isFullyInitialized } from '$lib/stores';
 	import { NavigationMenu } from '$lib/components';
-	import { getSendToast, getService } from '$lib/utilities';
+	import { getService, toaster } from '$lib/utilities';
+	import { Toaster } from '@skeletonlabs/skeleton-svelte';
+  
 
 	// Floating UI for Popups
 	import { computePosition, autoUpdate, flip, shift, offset, arrow } from '@floating-ui/dom';
@@ -34,7 +26,6 @@
 
 	initializeStores();
 	const drawerStore = getDrawerStore();
-	const sendToast = getSendToast(getToastStore());
 	let isGettingService = $state(false);
 
 	let connectedPopup: PopupSettings = {
@@ -52,11 +43,11 @@
 		isGettingService = true;
 		try {
 			await getService();
-			sendToast('success', `Successfully connected to the BlueRetro service`);
+			toaster.success({ title: 'Successfully connected to the BlueRetro service'});
 			isGettingService = false;
 		} catch (error) {
 			console.log('Error initializing device', error);
-			sendToast('error', `Error initializing connection to BlueRetro device`);
+			toaster.error({ title: 'Error initializing connection to BlueRetro device'});
 			isGettingService = false;
 		}
 	};
@@ -141,16 +132,16 @@
 			<div class="flex flex-col gap-4 flex-1">
 				{#if isGettingService}
 					<div
-						class="border-token rounded-token border-primary-500 flex text-xl font-bold flex-start gap-4 p-4 justify-center items-center"
+						class="border rounded-base border-primary-500 flex text-xl font-bold flex-start gap-4 p-4 justify-center items-center"
 					>
 						Connecting
 
-						<ProgressRadial width="w-10" />
+						<ProgressRing width="w-10" />
 					</div>
 				{:else}
 					<div class="flex-col">
 						<div class="flex gap-4 items-center">
-							<button type="button" class="btn variant-filled" onclick={initializeDevice}>
+							<button type="button" class="btn preset-filled" onclick={initializeDevice}>
 								Select Device
 							</button>
 						</div>
@@ -165,7 +156,7 @@
 	<div class="p-4 flex flex-col gap-4 max-w-(--breakpoint-md)">
 		{@render children?.()}
 	</div>
-	<Toast position="t" />
+	<ToastProvider position="t" />
 
 	<!-- Page Route Content -->
 </AppShell>
@@ -175,5 +166,7 @@
 		<button class="btn" onclick={onDisconnectClick}>Disconnect</button>
 		<button class="btn" onclick={onSwitchDeviceClick}>Switch Device</button>
 	</div>
-	<div class="arrow bg-surface-100-800-token"></div>
+	<div class="arrow bg-surface-100-900"></div>
 </div>
+
+<Toaster {toaster}></Toaster>

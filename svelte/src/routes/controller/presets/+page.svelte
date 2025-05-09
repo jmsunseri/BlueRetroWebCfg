@@ -3,18 +3,16 @@
 	import { btn, maxMainInput } from '$lib/constants';
 	import { isFullyInitialized } from '$lib/stores';
 	import type { IPreset, IPresetFile } from '$lib/interfaces';
-	import { getSendToast, getService, writeInputConfig } from '$lib/utilities';
+	import { getService, toaster, writeInputConfig } from '$lib/utilities';
 	import { GameId } from '$lib/components';
-	import { ProgressRadial, getToastStore } from '@skeletonlabs/skeleton';
+	import { ProgressRing } from '@skeletonlabs/skeleton-svelte';
 
 	const consoles: { [key: string]: IPreset[] } = $state({});
 	let preset: IPreset | undefined = $state(undefined);
 	let konsole: string | undefined = $state(undefined);
 	let input: number = $state(0);
 	let isDoingSomething = $state(false);
-	let gameId: string = $state();
-
-	const sendToast = getSendToast(getToastStore());
+	let gameId: string = $state('');
 
 	const getFiles = async (): Promise<IPresetFile[]> => {
 		const response = await fetch(
@@ -55,10 +53,10 @@
 
 			try {
 				await writeInputConfig(input, cfg, await getService());
-				sendToast('success', 'Success updating output configuration!');
+				toaster.success({ title: `Success updating output configuration!`});
 			} catch (error) {
 				console.log('there was an error writing your preset configuration', error);
-				sendToast('error', 'There was an error saving ');
+				toaster.error({ title: `There was an error saving`});
 			}
 		}
 		isDoingSomething = false;
@@ -71,7 +69,7 @@
 			await fetchMap(configFiles);
 		} catch (error) {
 			console.log('there was an error fetching the presets', error);
-			sendToast('error', 'There was an error fetching the presets');
+			toaster.error({ title: `There was an error fetching the presets`});
 		}
 		isDoingSomething = false;
 	});
@@ -120,11 +118,11 @@
 <button
 	onclick={savePresetInput}
 	type="button"
-	class="btn variant-filled flex-row gap-4"
+	class="btn preset-filled flex-row gap-4"
 	disabled={!saveButtonEnabled || !$isFullyInitialized || isDoingSomething}
 >
 	Save
 	{#if $isFullyInitialized && isDoingSomething}
-		<ProgressRadial width="w-6" />
+		<ProgressRing width="w-6" />
 	{/if}
 </button>

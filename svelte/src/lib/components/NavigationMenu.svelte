@@ -1,11 +1,9 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { getDrawerStore } from '@skeletonlabs/skeleton';
-
 	const drawerStore = getDrawerStore();
 
 	let classesActive = $derived((href: string) =>
-		href === page.url.pathname ? '!variant-filled-primary' : '');
+		href === page.url.pathname ? '!preset-filled-primary-500' : '');
 	const onItemSelect = () => {
 		drawerStore.close();
 	};

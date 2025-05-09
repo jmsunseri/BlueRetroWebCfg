@@ -8,13 +8,12 @@
 		cfg_cmd_get_file,
 		cfg_cmd_open_dir
 	} from '$lib/constants';
-	import { getGameName, getSendToast, getService } from '$lib/utilities';
+	import { getGameName, getService, toaster } from '$lib/utilities';
 	import { device, deviceConfig, isFullyInitialized } from '$lib/stores';
 	import { IconTrash } from '@tabler/icons-svelte';
 	import type { IBlueRetroFile } from '$lib/interfaces';
-	import { ProgressRadial, getToastStore } from '@skeletonlabs/skeleton';
+	import { ProgressRing } from '@skeletonlabs/skeleton-svelte';
 
-	const sendToast = getSendToast(getToastStore());
 	let isDoingSomething = $state(false);
 	let deletingFileNumber: number | undefined = $state();
 
@@ -57,9 +56,9 @@
 				...c,
 				files: c?.files?.filter((_, i) => i !== index)
 			}));
-			sendToast('success', 'Success updating firmware');
+			toaster.success({ title: `Success updating firmware`});
 		} catch (error) {
-			sendToast('error', 'Error updating firmware!');
+			toaster.error({ title: `Error updating firmware!`});
 			console.log(`error deleting file: ${filename}`, error);
 		}
 		isDoingSomething = false;
@@ -97,7 +96,7 @@
 
 {#if isDoingSomething && !$deviceConfig?.files}
 	<div class="flex flex-col items-center gap-4 p-4">
-		<ProgressRadial width="w-24" />
+		<ProgressRing width="w-24" />
 		Fetching Files...
 	</div>
 {:else}
@@ -108,11 +107,11 @@
 					<span class="flex-1">{file.gameName ?? file.name}</span>
 					<button
 						onclick={async () => await deleteFile(file.name, i)}
-						class="btn-icon btn-icon-sm hover:variant-filled-error"
+						class="btn-icon btn-icon-sm hover:preset-filled-error-500"
 						disabled={isDoingSomething}
 					>
 						{#if deletingFileNumber === i}
-							<ProgressRadial width="w-6" />
+							<ProgressRing width="w-6" />
 						{:else}
 							<IconTrash />
 						{/if}

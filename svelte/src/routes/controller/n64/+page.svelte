@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { FileButton, ProgressRadial, getToastStore } from '@skeletonlabs/skeleton';
+	import { FileUpload, ProgressRing } from '@skeletonlabs/skeleton-svelte';
 	import { block, brUuid, mtu, pakSize } from '$lib/constants';
-	import { downloadFile, getSendToast, getService } from '$lib/utilities';
+	import { downloadFile, toaster, getService } from '$lib/utilities';
 	import { isFullyInitialized } from '$lib/stores';
 	import { UploadProgress } from '$lib/components';
 
@@ -12,9 +12,8 @@
 	let isWriting = $state(false);
 	let isFormatting = $state(false);
 	let isCanceling = false;
-	let files: FileList = $state();
+	let files: FileList | undefined = $state();
 
-	const sendToast = getSendToast(getToastStore());
 
 	const n64ReadFileRecursive = async (
 		chrc: BluetoothRemoteGATTCharacteristic,
@@ -151,9 +150,9 @@
 				new Blob([data.buffer], { type: 'application/mpk' }),
 				`ctrl_pak-${pakNumber + 1}.mpk`
 			);
-			sendToast('success', 'Success reading controller pak');
+			toaster.success({ title: 'Success reading controller pak'});
 		} catch (error) {
-			sendToast('error', 'There was an error reading the controller pak!');
+			toaster.error({ title: 'There was an error reading the controller pak!'});
 		}
 		isDoingSomething = false;
 		isReading = false;
@@ -163,29 +162,31 @@
 	const onWriteClick = async () => {
 		isDoingSomething = true;
 		isWriting = true;
-		try {
-			const reader = new FileReader();
-			reader.onabort = (_) => {
-				console.log('File write cancelled');
-			};
-			reader.onload = async (_) => {
-				const data = reader.result?.slice(0, pakSize);
-				if (data && data instanceof ArrayBuffer) {
-					await n64WriteFile(data, pakNumber);
-				}
-				sendToast('success', 'Success writing');
+		if(files?.length) {
+			try {
+				const reader = new FileReader();
+				reader.onabort = (_) => {
+					console.log('File write cancelled');
+				};
+				reader.onload = async (_) => {
+					const data = reader.result?.slice(0, pakSize);
+					if (data && data instanceof ArrayBuffer) {
+						await n64WriteFile(data, pakNumber);
+					}
+					toaster.success({ title: 'Success writing'});
+					isDoingSomething = false;
+					isWriting = false;
+					progress = 0;
+				};
+
+				// Read in the image file as a binary string.
+				reader.readAsArrayBuffer(files[0]);
+			} catch {
+				toaster.error({ title: 'There was an error writing!'});
 				isDoingSomething = false;
 				isWriting = false;
 				progress = 0;
-			};
-
-			// Read in the image file as a binary string.
-			reader.readAsArrayBuffer(files[0]);
-		} catch {
-			sendToast('error', 'There was an error writing!');
-			isDoingSomething = false;
-			isWriting = false;
-			progress = 0;
+			}
 		}
 	};
 
@@ -194,9 +195,9 @@
 		isFormatting = true;
 		try {
 			await n64WriteFile(makeFormattedPak().buffer, pakNumber);
-			sendToast('success', 'Success formatting');
+			toaster.success({ title: 'Success formatting'});
 		} catch (error) {
-			sendToast('error', 'There was an error formatting!');
+			toaster.error({ title: 'There was an error formatting!'});
 		}
 		isDoingSomething = false;
 		isFormatting = false;
@@ -221,32 +222,32 @@
 	<div class="flex md:flex-row gap-4 md:items-center flex-col">
 		<button
 			onclick={onReadClick}
-			class="btn variant-ghost flex-row gap-4"
+			class="btn preset-tonal border border-surface-500 flex-row gap-4"
 			disabled={isDoingSomething || !$isFullyInitialized}
 		>
 			Read
 			{#if $isFullyInitialized && isReading}
-				<ProgressRadial width="w-6" />
+				<ProgressRing width="w-6" />
 			{/if}
 		</button>
 
 		<button
 			onclick={onFormatClick}
-			class="btn variant-ghost flex-row gap-4"
+			class="btn preset-tonal border border-surface-500 flex-row gap-4"
 			disabled={isDoingSomething || !$isFullyInitialized}
 		>
 			Format
 			{#if $isFullyInitialized && isFormatting}
-				<ProgressRadial width="w-6" />
+				<ProgressRing width="w-6" />
 			{/if}
 		</button>
 
 		<div class="flex flex-row items-center gap-4">
-			<FileButton
+			<FileUpload
 				name="files"
 				bind:files
-				button="btn variant-ghost flex-row gap-4"
-				disabled={isDoingSomething || !$isFullyInitialized}>Upload</FileButton
+				button="btn preset-tonal border border-surface-500 flex-row gap-4"
+				disabled={isDoingSomething || !$isFullyInitialized}>Upload</FileUpload
 			>
 
 			<p>Select .MPK file to write</p>
@@ -254,12 +255,12 @@
 
 		<button
 			onclick={onWriteClick}
-			class="btn variant-ghost flex-row gap-4"
+			class="btn preset-tonal border border-surface-500 flex-row gap-4"
 			disabled={isDoingSomething || !$isFullyInitialized || !files?.length}
 		>
 			Write
 			{#if $isFullyInitialized && isWriting}
-				<ProgressRadial width="w-6" />
+				<ProgressRing width="w-6" />
 			{/if}
 		</button>
 	</div>
