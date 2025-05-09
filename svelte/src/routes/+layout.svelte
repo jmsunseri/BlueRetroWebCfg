@@ -137,7 +137,7 @@
 		
 	{/snippet}
 	{#if !$isFullyInitialized}
-		<div class="p-4 flex gap-4 flex md:flex-row flex-col max-w-screen-md">
+		<div class="p-4 flex gap-4 flex md:flex-row flex-col max-w-(--breakpoint-md)">
 			<div class="flex flex-col gap-4 flex-1">
 				{#if isGettingService}
 					<div
@@ -162,7 +162,7 @@
 		</div>
 	{/if}
 
-	<div class="p-4 flex flex-col gap-4 max-w-screen-md">
+	<div class="p-4 flex flex-col gap-4 max-w-(--breakpoint-md)">
 		{@render children?.()}
 	</div>
 	<Toast position="t" />
