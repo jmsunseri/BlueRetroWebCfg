@@ -4,10 +4,10 @@
 	import { getSendToast, getService } from '$lib/utilities';
 	import { ProgressRadial, getToastStore } from '@skeletonlabs/skeleton';
 
-	let output: number = 0;
-	let accessory: number = 0;
-	let mode: number = 0;
-	let isDoingSomething = false;
+	let output: number = $state(0);
+	let accessory: number = $state(0);
+	let mode: number = $state(0);
+	let isDoingSomething = $state(false);
 
 	const sendToast = getSendToast(getToastStore());
 
@@ -62,7 +62,7 @@
 	<select
 		class="select"
 		bind:value={output}
-		on:change={loadOutputConfig}
+		onchange={loadOutputConfig}
 		disabled={!$isFullyInitialized || isDoingSomething}
 	>
 		{#each { length: maxOutput } as _, i}
@@ -88,7 +88,7 @@
 </label>
 <button
 	disabled={!$isFullyInitialized || isDoingSomething}
-	on:click={saveOutputConfig}
+	onclick={saveOutputConfig}
 	type="button"
 	class="btn variant-filled flex-row gap-4"
 >

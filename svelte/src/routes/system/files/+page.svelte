@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import {
 		brUuid,
 		cfg_cmd_close_dir,
@@ -13,8 +15,8 @@
 	import { ProgressRadial, getToastStore } from '@skeletonlabs/skeleton';
 
 	const sendToast = getSendToast(getToastStore());
-	let isDoingSomething = false;
-	let deletingFileNumber: number | undefined;
+	let isDoingSomething = $state(false);
+	let deletingFileNumber: number | undefined = $state();
 
 	const readFileRecursive = async (
 		chrc: BluetoothRemoteGATTCharacteristic,
@@ -86,9 +88,11 @@
 		isDoingSomething = false;
 	};
 
-	$: if ($isFullyInitialized && ($deviceConfig?.files?.length || 0) == 0 && !isDoingSomething) {
-		getFiles();
-	}
+	run(() => {
+		if ($isFullyInitialized && ($deviceConfig?.files?.length || 0) == 0 && !isDoingSomething) {
+			getFiles();
+		}
+	});
 </script>
 
 {#if isDoingSomething && !$deviceConfig?.files}
@@ -103,7 +107,7 @@
 				<li class="flex flex-row gap-4">
 					<span class="flex-1">{file.gameName ?? file.name}</span>
 					<button
-						on:click={async () => await deleteFile(file.name, i)}
+						onclick={async () => await deleteFile(file.name, i)}
 						class="btn-icon btn-icon-sm hover:variant-filled-error"
 						disabled={isDoingSomething}
 					>

@@ -13,11 +13,11 @@
 	import { getSendToast, getService } from '$lib/utilities';
 	import { UploadProgress } from '$lib/components';
 
-	let latestVersion: string | undefined;
-	let isDoingSomething = false;
-	let progress = 0;
+	let latestVersion: string | undefined = $state();
+	let isDoingSomething = $state(false);
+	let progress = $state(0);
 	let isCanceling = false;
-	let files: FileList;
+	let files: FileList | undefined = $state();
 
 	const sendToast = getSendToast(getToastStore());
 
@@ -27,10 +27,10 @@
 		latestVersion = json.tag_name;
 	});
 
-	$: upgradeAvailable = latestVersion && $deviceConfig?.appVersion?.indexOf(latestVersion) == -1;
+	let upgradeAvailable = $derived(latestVersion && $deviceConfig?.appVersion?.indexOf(latestVersion) == -1);
 
-	$: isHw2 =
-		$deviceConfig?.appVersion?.indexOf('hw2') != -1 || $deviceConfig?.appName?.indexOf('hw2') != -1;
+	let isHw2 =
+		$derived($deviceConfig?.appVersion?.indexOf('hw2') != -1 || $deviceConfig?.appName?.indexOf('hw2') != -1);
 
 	const otaWriteFwRecursive = async (
 		chrc: BluetoothRemoteGATTCharacteristic,
@@ -102,7 +102,9 @@
 			};
 
 			// Read in the image file as a binary string.
-			reader.readAsArrayBuffer(files[0]);
+			if(files && files.length) {
+				reader.readAsArrayBuffer(files[0]);
+			}
 		} catch {
 			sendToast('error', 'There was an error updating the firmware!');
 			isDoingSomething = false;
@@ -133,7 +135,7 @@
 	</div>
 
 	<button
-		on:click={onWriteClick}
+		onclick={onWriteClick}
 		class="btn variant-ghost"
 		disabled={isDoingSomething || !$device || !files?.length}
 	>

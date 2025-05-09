@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import { deviceConfig, isFullyInitialized } from '$lib/stores';
 	import {
 		systemCfg as systems,
@@ -10,12 +12,12 @@
 	import { getSendToast, getService } from '$lib/utilities';
 	import { ProgressRadial, getToastStore } from '@skeletonlabs/skeleton';
 
-	let system: number = 0;
-	let multitap: number = 0;
-	let inquiryMode: number | undefined;
-	let bank: number | undefined;
+	let system: number = $state(0);
+	let multitap: number = $state(0);
+	let inquiryMode: number | undefined = $state();
+	let bank: number | undefined = $state();
 
-	let isDoingSomething = false;
+	let isDoingSomething = $state(false);
 
 	const sendToast = getSendToast(getToastStore());
 
@@ -64,9 +66,11 @@
 		isDoingSomething = false;
 	};
 
-	$: if (!!$isFullyInitialized && !$deviceConfig?.globalConfig) {
-		loadGlobalConfig();
-	}
+	run(() => {
+		if (!!$isFullyInitialized && !$deviceConfig?.globalConfig) {
+			loadGlobalConfig();
+		}
+	});
 
 	const saveGlobal = async () => {
 		isDoingSomething = true;
@@ -150,7 +154,7 @@
 	disabled={!$isFullyInitialized || isDoingSomething}
 	type="button"
 	class="btn variant-filled flex-row gap-4"
-	on:click={saveGlobal}
+	onclick={saveGlobal}
 >
 	Save
 	{#if $isFullyInitialized && isDoingSomething}

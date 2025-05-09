@@ -10,10 +10,10 @@
 	import { getToastStore, ProgressRadial } from '@skeletonlabs/skeleton';
 
 	const sendToast = getSendToast(getToastStore());
-	let isDoingSomething = false;
-	let isSettingDeepSleep = false;
-	let isResetting = false;
-	let isFactoryResetting = false;
+	let isDoingSomething = $state(false);
+	let isSettingDeepSleep = $state(false);
+	let isResetting = $state(false);
+	let isFactoryResetting = $state(false);
 
 	const setDeepSleep = async () => {
 		isDoingSomething = true;
@@ -66,7 +66,7 @@
 
 <div class="flex flex-col md:flex-row gap-4">
 	<button
-		on:click={setDeepSleep}
+		onclick={setDeepSleep}
 		disabled={!$isFullyInitialized || isDoingSomething}
 		class="btn variant-ghost flex-row gap-4"
 	>
@@ -76,7 +76,7 @@
 		{/if}
 	</button>
 	<button
-		on:click={setReset}
+		onclick={setReset}
 		disabled={!$isFullyInitialized || isDoingSomething}
 		class="btn variant-ghost flex-row gap-4"
 	>
@@ -86,7 +86,7 @@
 		{/if}
 	</button>
 	<button
-		on:click={setFactoryReset}
+		onclick={setFactoryReset}
 		disabled={!$isFullyInitialized || isDoingSomething}
 		class="btn variant-ghost flex-row gap-4"
 	>

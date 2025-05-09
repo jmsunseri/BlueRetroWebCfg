@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import { ButtonMapping, GameId } from '$lib/components';
 	import type { IButtonMapping } from '$lib/interfaces';
 	import { IconPlus, IconDeviceFloppy } from '@tabler/icons-svelte';
@@ -7,12 +9,12 @@
 	import { getSendToast, getService, writeInputConfig } from '$lib/utilities';
 	import { ProgressRadial, getToastStore } from '@skeletonlabs/skeleton';
 
-	let source: number = 0;
-	let input: number;
-	let destination: number = 0;
-	let buttonMappings: Array<IButtonMapping> = [];
-	let gameId: string;
-	let isDoingSomething = false;
+	let source: number = $state(0);
+	let input: number = $state();
+	let destination: number = $state(0);
+	let buttonMappings: Array<IButtonMapping> = $state([]);
+	let gameId: string = $state();
+	let isDoingSomething = $state(false);
 
 	const sendToast = getSendToast(getToastStore());
 
@@ -113,11 +115,11 @@
 		return await readRecursive(config, inputCtrl, ctrl_chrc, data_chrc);
 	};
 
-	$: {
+	run(() => {
 		if ($isFullyInitialized && buttonMappings.length === 0 && !isDoingSomething) {
 			loadInputConfiguration(input);
 		}
-	}
+	});
 </script>
 
 <GameId bind:gameId />
@@ -125,7 +127,7 @@
 <div class="flex md:flex-row flex-col gap-4">
 	<label class="label">
 		<span>Bluetooth Device #</span>
-		<select class="select" bind:value={input} on:change={() => loadInputConfiguration(input)}>
+		<select class="select" bind:value={input} onchange={() => loadInputConfiguration(input)}>
 			{#each { length: maxMainInput } as _, i}
 				<option value={i}>{i + 1}</option>
 			{/each}
@@ -153,7 +155,7 @@
 <button
 	disabled={!$isFullyInitialized}
 	class="btn variant-filled flex-row gap-4"
-	on:click={writeConfiguration}
+	onclick={writeConfiguration}
 >
 	Save Mappings
 	{#if $isFullyInitialized && isDoingSomething}
@@ -186,7 +188,7 @@
 <button
 	disabled={!$isFullyInitialized}
 	class="btn variant-ghost-tertiary flex-row gap-4"
-	on:click={addMapping}
+	onclick={addMapping}
 >
 	Add Mapping <IconPlus />
 </button>

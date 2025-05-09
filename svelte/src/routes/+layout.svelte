@@ -25,12 +25,17 @@
 
 	// Floating UI for Popups
 	import { computePosition, autoUpdate, flip, shift, offset, arrow } from '@floating-ui/dom';
+	interface Props {
+		children?: import('svelte').Snippet;
+	}
+
+	let { children }: Props = $props();
 	storePopup.set({ computePosition, autoUpdate, flip, shift, offset, arrow });
 
 	initializeStores();
 	const drawerStore = getDrawerStore();
 	const sendToast = getSendToast(getToastStore());
-	let isGettingService = false;
+	let isGettingService = $state(false);
 
 	let connectedPopup: PopupSettings = {
 		target: 'connectedPopup',
@@ -81,48 +86,56 @@
 </Drawer>
 <!-- App Shell -->
 <AppShell slotSidebarLeft="bg-surface-500/5 md:w-56 w-0 md:p-4">
-	<svelte:fragment slot="header">
-		<!-- App Bar -->
-		<AppBar background="bg-surface-700" padding="p-2 md:p-4">
-			<svelte:fragment slot="lead">
-				<div class="flex flex-row gap-4 items-center">
-					<img src="/icon.png" alt="blueretro icon" class="h-12 pl-2 hidden md:flex" />
-					<button class="btn btn-icon md:hidden text-white" on:click={onMenuClick}>
-						<IconMenu2 />
-					</button>
-					<strong class="text-xl text-white">BlueRetro</strong>
-				</div>
-				{#if !!$device}
-					<button class=" btn btn-icon text-white" use:popup={connectedPopup}>
-						<IconBluetoothConnected />
-					</button>
-				{/if}
-			</svelte:fragment>
-			<svelte:fragment slot="trail">
-				<div>
-					<a
-						class="btn-icon text-white"
-						href="https://discord.gg/EXqV7W8MtY"
-						target="_blank"
-						rel="noreferrer"
-					>
-						<IconBrandDiscord />
-					</a>
-					<a
-						class="btn-icon text-white"
-						href="https://github.com/darthcloud/BlueRetro"
-						target="_blank"
-						rel="noreferrer"
-					>
-						<IconBrandGithub />
-					</a>
-				</div>
-			</svelte:fragment>
-		</AppBar>
-	</svelte:fragment>
-	<svelte:fragment slot="sidebarLeft">
-		<NavigationMenu />
-	</svelte:fragment>
+	{#snippet header()}
+	
+			<!-- App Bar -->
+			<AppBar background="bg-surface-700" padding="p-2 md:p-4">
+				{#snippet lead()}
+					
+						<div class="flex flex-row gap-4 items-center">
+							<img src="/icon.png" alt="blueretro icon" class="h-12 pl-2 hidden md:flex" />
+							<button class="btn btn-icon md:hidden text-white" onclick={onMenuClick}>
+								<IconMenu2 />
+							</button>
+							<strong class="text-xl text-white">BlueRetro</strong>
+						</div>
+						{#if !!$device}
+							<button class=" btn btn-icon text-white" use:popup={connectedPopup}>
+								<IconBluetoothConnected />
+							</button>
+						{/if}
+					
+					{/snippet}
+				{#snippet trail()}
+					
+						<div>
+							<a
+								class="btn-icon text-white"
+								href="https://discord.gg/EXqV7W8MtY"
+								target="_blank"
+								rel="noreferrer"
+							>
+								<IconBrandDiscord />
+							</a>
+							<a
+								class="btn-icon text-white"
+								href="https://github.com/darthcloud/BlueRetro"
+								target="_blank"
+								rel="noreferrer"
+							>
+								<IconBrandGithub />
+							</a>
+						</div>
+					
+					{/snippet}
+			</AppBar>
+		
+	{/snippet}
+	{#snippet sidebarLeft()}
+	
+			<NavigationMenu />
+		
+	{/snippet}
 	{#if !$isFullyInitialized}
 		<div class="p-4 flex gap-4 flex md:flex-row flex-col max-w-screen-md">
 			<div class="flex flex-col gap-4 flex-1">
@@ -137,7 +150,7 @@
 				{:else}
 					<div class="flex-col">
 						<div class="flex gap-4 items-center">
-							<button type="button" class="btn variant-filled" on:click={initializeDevice}>
+							<button type="button" class="btn variant-filled" onclick={initializeDevice}>
 								Select Device
 							</button>
 						</div>
@@ -150,7 +163,7 @@
 	{/if}
 
 	<div class="p-4 flex flex-col gap-4 max-w-screen-md">
-		<slot />
+		{@render children?.()}
 	</div>
 	<Toast position="t" />
 
@@ -159,8 +172,8 @@
 
 <div class="card p-4 max-w-sm" data-popup="connectedPopup">
 	<div class="grid grid-cols-1 gap-2">
-		<button class="btn" on:click={onDisconnectClick}>Disconnect</button>
-		<button class="btn" on:click={onSwitchDeviceClick}>Switch Device</button>
+		<button class="btn" onclick={onDisconnectClick}>Disconnect</button>
+		<button class="btn" onclick={onSwitchDeviceClick}>Switch Device</button>
 	</div>
-	<div class="arrow bg-surface-100-800-token" />
+	<div class="arrow bg-surface-100-800-token"></div>
 </div>

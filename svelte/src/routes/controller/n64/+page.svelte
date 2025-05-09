@@ -5,14 +5,14 @@
 	import { isFullyInitialized } from '$lib/stores';
 	import { UploadProgress } from '$lib/components';
 
-	let pakNumber = 0;
-	let progress = 0;
-	let isDoingSomething = false;
-	let isReading = false;
-	let isWriting = false;
-	let isFormatting = false;
+	let pakNumber = $state(0);
+	let progress = $state(0);
+	let isDoingSomething = $state(false);
+	let isReading = $state(false);
+	let isWriting = $state(false);
+	let isFormatting = $state(false);
 	let isCanceling = false;
-	let files: FileList;
+	let files: FileList = $state();
 
 	const sendToast = getSendToast(getToastStore());
 
@@ -220,7 +220,7 @@
 
 	<div class="flex md:flex-row gap-4 md:items-center flex-col">
 		<button
-			on:click={onReadClick}
+			onclick={onReadClick}
 			class="btn variant-ghost flex-row gap-4"
 			disabled={isDoingSomething || !$isFullyInitialized}
 		>
@@ -231,7 +231,7 @@
 		</button>
 
 		<button
-			on:click={onFormatClick}
+			onclick={onFormatClick}
 			class="btn variant-ghost flex-row gap-4"
 			disabled={isDoingSomething || !$isFullyInitialized}
 		>
@@ -253,7 +253,7 @@
 		</div>
 
 		<button
-			on:click={onWriteClick}
+			onclick={onWriteClick}
 			class="btn variant-ghost flex-row gap-4"
 			disabled={isDoingSomething || !$isFullyInitialized || !files?.length}
 		>

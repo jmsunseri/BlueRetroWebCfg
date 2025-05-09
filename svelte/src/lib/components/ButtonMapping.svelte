@@ -9,28 +9,44 @@
 		scaling as scalingOptions,
 		diagScaling
 	} from '$lib/constants';
-	import ChevronDown from '@tabler/icons-svelte/IconChevronDown.svelte';
-	import ChevronUp from '@tabler/icons-svelte/IconChevronUp.svelte';
-	import { IconX } from '@tabler/icons-svelte';
+	import { IconChevronDown, IconChevronUp, IconX } from '@tabler/icons-svelte';
 
 	const turboOptions: { [key: string]: number } = turboMask;
 
-	export let sourceSystem: number;
-	export let destinationSystem: number;
-	export let onRemoveClicked: (index: number) => void;
-	export let index: number;
 
-	export let source: number | undefined = undefined;
-	export let destination: number | undefined = undefined;
-	export let destinationId: number | undefined = undefined;
-	export let max: number = 100;
-	export let threshold: number = 50;
-	export let deadzone: number = 135;
-	export let turbo: number | undefined = undefined;
-	export let scaling: number | undefined = undefined;
-	export let diagonal: number | undefined = undefined;
+	interface Props {
+		sourceSystem: number;
+		destinationSystem: number;
+		onRemoveClicked: (index: number) => void;
+		index: number;
+		source?: number | undefined;
+		destination?: number | undefined;
+		destinationId?: number | undefined;
+		max?: number;
+		threshold?: number;
+		deadzone?: number;
+		turbo?: number | undefined;
+		scaling?: number | undefined;
+		diagonal?: number | undefined;
+	}
 
-	let isShowingMore = false;
+	let {
+		sourceSystem,
+		destinationSystem,
+		onRemoveClicked,
+		index,
+		source = $bindable(undefined),
+		destination = $bindable(undefined),
+		destinationId = $bindable(undefined),
+		max = $bindable(100),
+		threshold = $bindable(50),
+		deadzone = $bindable(135),
+		turbo = $bindable(undefined),
+		scaling = $bindable(undefined),
+		diagonal = $bindable(undefined)
+	}: Props = $props();
+
+	let isShowingMore = $state(false);
 
 	const toggleShowMore = () => {
 		isShowingMore = !isShowingMore;
@@ -117,19 +133,19 @@
 		</div>
 
 		<div>
-			<button type="button" class="btn-icon" on:click={() => onRemoveClicked(index)}>
+			<button type="button" class="btn-icon" onclick={() => onRemoveClicked(index)}>
 				<IconX />
 			</button>
 		</div>
 	</div>
 
 	<div class="flex flex-row justify-center">
-		<button class="btn btn-sm" on:click={toggleShowMore}>
+		<button class="btn btn-sm" onclick={toggleShowMore}>
 			Show {isShowingMore ? 'Less' : 'More'}
 			{#if isShowingMore}
-				<ChevronUp />
+				<IconChevronUp />
 			{:else}
-				<ChevronDown />
+				<IconChevronDown />
 			{/if}
 		</button>
 	</div>

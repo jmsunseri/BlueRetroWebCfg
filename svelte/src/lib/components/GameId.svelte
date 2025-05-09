@@ -9,9 +9,13 @@
 	import { getGameId, getGameName, getSendToast, getService } from '$lib/utilities';
 	import { RadioGroup, RadioItem, getToastStore } from '@skeletonlabs/skeleton';
 
-	export let gameId: string;
-	let gameName: string;
-	let value: ControllerConfigType = 'global';
+	interface Props {
+		gameId: string;
+	}
+
+	let { gameId = $bindable() }: Props = $props();
+	let gameName: string | undefined = $state();
+	let value: ControllerConfigType = $state('global');
 
 	const sendToast = getSendToast(getToastStore());
 
@@ -78,7 +82,7 @@
 </script>
 
 <div class="flex flex-col gap-1">
-	<!-- svelte-ignore a11y-label-has-associated-control -->
+	<!-- svelte-ignore a11y_label_has_associated_control -->
 	<label class="label">
 		<span>Config</span>
 	</label>

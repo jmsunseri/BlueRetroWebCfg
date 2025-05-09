@@ -7,12 +7,12 @@
 	import { GameId } from '$lib/components';
 	import { ProgressRadial, getToastStore } from '@skeletonlabs/skeleton';
 
-	const consoles: { [key: string]: IPreset[] } = {};
-	let preset: IPreset | undefined = undefined;
-	let konsole: string | undefined = undefined;
-	let input: number = 0;
-	let isDoingSomething = false;
-	let gameId: string;
+	const consoles: { [key: string]: IPreset[] } = $state({});
+	let preset: IPreset | undefined = $state(undefined);
+	let konsole: string | undefined = $state(undefined);
+	let input: number = $state(0);
+	let isDoingSomething = $state(false);
+	let gameId: string = $state();
 
 	const sendToast = getSendToast(getToastStore());
 
@@ -76,7 +76,7 @@
 		isDoingSomething = false;
 	});
 
-	$: saveButtonEnabled = preset;
+	let saveButtonEnabled = $derived(preset);
 </script>
 
 <GameId bind:gameId />
@@ -95,7 +95,7 @@
 	<select
 		class="select"
 		bind:value={konsole}
-		on:change={() => {
+		onchange={() => {
 			preset = undefined;
 		}}
 		disabled={!$isFullyInitialized || isDoingSomething}
@@ -118,7 +118,7 @@
 </label>
 
 <button
-	on:click={savePresetInput}
+	onclick={savePresetInput}
 	type="button"
 	class="btn variant-filled flex-row gap-4"
 	disabled={!saveButtonEnabled || !$isFullyInitialized || isDoingSomething}
