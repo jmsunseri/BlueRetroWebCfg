@@ -14,15 +14,5 @@ export default {
 	plugins: [
 		forms,
 		typography,
-		skeleton({
-			themes: {
-				preset: [
-					{
-						name: 'hamlindigo',
-						enhancements: true,
-					},
-				],
-			},
-		}),
 	],
 } satisfies Config;

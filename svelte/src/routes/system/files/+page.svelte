@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import {
 		brUuid,
 		cfg_cmd_close_dir,
@@ -6,15 +8,14 @@
 		cfg_cmd_get_file,
 		cfg_cmd_open_dir
 	} from '$lib/constants';
-	import { getGameName, getSendToast, getService } from '$lib/utilities';
+	import { getGameName, getService, toaster } from '$lib/utilities';
 	import { device, deviceConfig, isFullyInitialized } from '$lib/stores';
 	import { IconTrash } from '@tabler/icons-svelte';
 	import type { IBlueRetroFile } from '$lib/interfaces';
-	import { ProgressRadial, getToastStore } from '@skeletonlabs/skeleton';
+	import { ProgressRing } from '@skeletonlabs/skeleton-svelte';
 
-	const sendToast = getSendToast(getToastStore());
-	let isDoingSomething = false;
-	let deletingFileNumber: number | undefined;
+	let isDoingSomething = $state(false);
+	let deletingFileNumber: number | undefined = $state();
 
 	const readFileRecursive = async (
 		chrc: BluetoothRemoteGATTCharacteristic,
@@ -55,9 +56,9 @@
 				...c,
 				files: c?.files?.filter((_, i) => i !== index)
 			}));
-			sendToast('success', 'Success updating firmware');
+			toaster.success({ title: `Success updating firmware`});
 		} catch (error) {
-			sendToast('error', 'Error updating firmware!');
+			toaster.error({ title: `Error updating firmware!`});
 			console.log(`error deleting file: ${filename}`, error);
 		}
 		isDoingSomething = false;
@@ -86,29 +87,32 @@
 		isDoingSomething = false;
 	};
 
-	$: if ($isFullyInitialized && ($deviceConfig?.files?.length || 0) == 0 && !isDoingSomething) {
-		getFiles();
-	}
+	run(() => {
+		if ($isFullyInitialized && ($deviceConfig?.files?.length || 0) == 0 && !isDoingSomething) {
+			getFiles();
+		}
+	});
 </script>
 
 {#if isDoingSomething && !$deviceConfig?.files}
 	<div class="flex flex-col items-center gap-4 p-4">
-		<ProgressRadial width="w-24" />
+		<ProgressRing classes="w-6 h-6" value={null} />
 		Fetching Files...
 	</div>
 {:else}
+<div class="flex flex-row">
 	<ul class="list flex-col flex-none">
 		{#if $device && $deviceConfig?.files?.length}
 			{#each $deviceConfig.files as file, i}
 				<li class="flex flex-row gap-4">
 					<span class="flex-1">{file.gameName ?? file.name}</span>
 					<button
-						on:click={async () => await deleteFile(file.name, i)}
-						class="btn-icon btn-icon-sm hover:variant-filled-error"
+						onclick={async () => await deleteFile(file.name, i)}
+						class="btn-icon btn-icon-sm hover:preset-filled-error-500"
 						disabled={isDoingSomething}
 					>
 						{#if deletingFileNumber === i}
-							<ProgressRadial width="w-6" />
+							<ProgressRing classes="w-6 h-6" value={null} />
 						{:else}
 							<IconTrash />
 						{/if}
@@ -117,4 +121,5 @@
 			{/each}
 		{/if}
 	</ul>
+</div>
 {/if}

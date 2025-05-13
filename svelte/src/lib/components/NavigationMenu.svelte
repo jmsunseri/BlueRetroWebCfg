@@ -1,51 +1,51 @@
 <script lang="ts">
-	import { page } from '$app/stores';
-	import { getDrawerStore } from '@skeletonlabs/skeleton';
+	import { page } from '$app/state';
 
-	const drawerStore = getDrawerStore();
+	interface Props {
+		onItemSelect?: VoidFunction;
+	}
 
-	$: classesActive = (href: string) =>
-		href === $page.url.pathname ? '!variant-filled-primary' : '';
-	const onItemSelect = () => {
-		drawerStore.close();
-	};
+	let classesActive = $derived((href: string) =>
+		href === page.url.pathname ? '!preset-filled-primary-500' : '');
+	
+	let { onItemSelect = $bindable() }: Props = $props();
 </script>
 
 <nav class="list-nav">
 	<ul>
-		<p class="font-bold pl-4 text-xl">Controller</p>
-		<li>
+		<p class="font-bold text-xl">Controller</p>
+		<li class="pl-4">
 			<a
-				on:click={onItemSelect}
+				onclick={onItemSelect}
 				class={classesActive('/controller/global')}
 				href="/controller/global">Global</a
 			>
 		</li>
-		<li>
+		<li class="pl-4">
 			<a
-				on:click={onItemSelect}
+				onclick={onItemSelect}
 				class={classesActive('/controller/output')}
 				href="/controller/output">Output</a
 			>
 		</li>
-		<li>
-			<a on:click={onItemSelect} class={classesActive('/controller/n64')} href="/controller/n64"
+		<li class="pl-4">
+			<a onclick={onItemSelect} class={classesActive('/controller/n64')} href="/controller/n64"
 				>N64 Controller Pack</a
 			>
 		</li>
 		<li>
-			<p class="font-bold pl-4">Button Mappings</p>
+			<p class="font-bold text-xl">Button Mappings</p>
 			<ul class="pl-4">
 				<li>
 					<a
-						on:click={onItemSelect}
+						onclick={onItemSelect}
 						class={classesActive('/controller/presets')}
 						href="/controller/presets">Presets</a
 					>
 				</li>
 				<li>
 					<a
-						on:click={onItemSelect}
+						onclick={onItemSelect}
 						class={classesActive('/controller/buttons')}
 						href="/controller/buttons">Custom</a
 					>
@@ -53,24 +53,19 @@
 			</ul>
 		</li>
 
-		<p class="font-bold pl-4 text-xl">System</p>
-		<li>
-			<a on:click={onItemSelect} class={classesActive('/system/info')} href="/system/info"
-				>Information</a
-			>
-		</li>
-		<li>
-			<a on:click={onItemSelect} class={classesActive('/system/files')} href="/system/files"
+		<p class="font-bold text-xl">System</p>
+		<li class="pl-4">
+			<a onclick={onItemSelect} class={classesActive('/system/files')} href="/system/files"
 				>Files</a
 			>
 		</li>
-		<li>
-			<a on:click={onItemSelect} class={classesActive('/system/manage')} href="/system/manage"
+		<li class="pl-4">
+			<a onclick={onItemSelect} class={classesActive('/system/manage')} href="/system/manage"
 				>Manage</a
 			>
 		</li>
-		<li>
-			<a on:click={onItemSelect} class={classesActive('/system/update')} href="/system/update"
+		<li class="pl-4">
+			<a onclick={onItemSelect} class={classesActive('/system/update')} href="/system/update"
 				>Update</a
 			>
 		</li>

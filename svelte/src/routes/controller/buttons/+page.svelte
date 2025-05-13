@@ -1,20 +1,20 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import { ButtonMapping, GameId } from '$lib/components';
 	import type { IButtonMapping } from '$lib/interfaces';
 	import { IconPlus, IconDeviceFloppy } from '@tabler/icons-svelte';
 	import { maxMainInput, labelName as deviceLabels, brUuid, maxMappings } from '$lib/constants';
 	import { isFullyInitialized } from '$lib/stores';
-	import { getSendToast, getService, writeInputConfig } from '$lib/utilities';
-	import { ProgressRadial, getToastStore } from '@skeletonlabs/skeleton';
+	import { getService, toaster, writeInputConfig } from '$lib/utilities';
+	import { ProgressRing } from '@skeletonlabs/skeleton-svelte';
 
-	let source: number = 0;
-	let input: number;
-	let destination: number = 0;
-	let buttonMappings: Array<IButtonMapping> = [];
-	let gameId: string;
-	let isDoingSomething = false;
-
-	const sendToast = getSendToast(getToastStore());
+	let source: number = $state(0);
+	let input: number = $state(0);
+	let destination: number = $state(0);
+	let buttonMappings: Array<IButtonMapping> = $state([]);
+	let gameId: string = $state('');
+	let isDoingSomething = $state(false);
 
 	const removeMapping = (index: number) => {
 		buttonMappings = buttonMappings.filter((_, i) => index != i);
@@ -48,10 +48,7 @@
 					`there was an error fetching button mappings for input ${inputNumber + 1}`,
 					error
 				);
-				sendToast(
-					'error',
-					`There was an error fetching button mappings for input ${inputNumber + 1}`
-				);
+				toaster.error({ title: `There was an error fetching button mappings for input ${inputNumber + 1}`});
 			}
 			isDoingSomething = false;
 		}
@@ -96,10 +93,10 @@
 		try {
 			const serv = await getService();
 			await writeInputConfig(input, config, serv);
-			sendToast('success', 'Success updating output configuration!');
+			toaster.success({ title: 'Success updating output configuration!'});
 		} catch (error) {
 			console.log('there was an error writing your preset configuration', error);
-			sendToast('error', 'There was an error saving ');
+			toaster.error({ title: 'There was an error saving '});
 		}
 		isDoingSomething = false;
 	};
@@ -113,11 +110,12 @@
 		return await readRecursive(config, inputCtrl, ctrl_chrc, data_chrc);
 	};
 
-	$: {
+	
+	$effect.pre(() => {
 		if ($isFullyInitialized && buttonMappings.length === 0 && !isDoingSomething) {
 			loadInputConfiguration(input);
 		}
-	}
+	});
 </script>
 
 <GameId bind:gameId />
@@ -125,7 +123,7 @@
 <div class="flex md:flex-row flex-col gap-4">
 	<label class="label">
 		<span>Bluetooth Device #</span>
-		<select class="select" bind:value={input} on:change={() => loadInputConfiguration(input)}>
+		<select class="select" bind:value={input} onchange={() => loadInputConfiguration(input)}>
 			{#each { length: maxMainInput } as _, i}
 				<option value={i}>{i + 1}</option>
 			{/each}
@@ -152,14 +150,13 @@
 
 <button
 	disabled={!$isFullyInitialized}
-	class="btn variant-filled flex-row gap-4"
-	on:click={writeConfiguration}
+	class="btn preset-filled flex-row gap-4"
+	onclick={writeConfiguration}
 >
-	Save Mappings
 	{#if $isFullyInitialized && isDoingSomething}
-		<ProgressRadial width="w-6" />
+		Getting Mappings<ProgressRing classes="w-6 h-6" value={null} />
 	{:else}
-		<IconDeviceFloppy />
+		Save Mappings<IconDeviceFloppy />
 	{/if}
 </button>
 
@@ -185,8 +182,8 @@
 
 <button
 	disabled={!$isFullyInitialized}
-	class="btn variant-ghost-tertiary flex-row gap-4"
-	on:click={addMapping}
+	class="btn preset-tonal-tertiary border border-tertiary-500 flex-row gap-4"
+	onclick={addMapping}
 >
 	Add Mapping <IconPlus />
 </button>

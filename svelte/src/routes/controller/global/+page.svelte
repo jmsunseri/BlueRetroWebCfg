@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import { deviceConfig, isFullyInitialized } from '$lib/stores';
 	import {
 		systemCfg as systems,
@@ -7,17 +9,15 @@
 		brUuid
 	} from '$lib/constants';
 	import type { IGlobalConfig } from '$lib/interfaces';
-	import { getSendToast, getService } from '$lib/utilities';
-	import { ProgressRadial, getToastStore } from '@skeletonlabs/skeleton';
+	import { getService, toaster } from '$lib/utilities';
+	import { ProgressRing } from '@skeletonlabs/skeleton-svelte';
 
-	let system: number = 0;
-	let multitap: number = 0;
-	let inquiryMode: number | undefined;
-	let bank: number | undefined;
+	let system: number = $state(0);
+	let multitap: number = $state(0);
+	let inquiryMode: number | undefined = $state();
+	let bank: number | undefined = $state();
 
-	let isDoingSomething = false;
-
-	const sendToast = getSendToast(getToastStore());
+	let isDoingSomething = $state(false);
 
 	const getApiVersion = async () => {
 		console.log('Reading Api version...');
@@ -58,15 +58,17 @@
 			bank = globalConfig.bank;
 		} catch (error) {
 			console.log('there was an error getting your current global config', error);
-			sendToast('error', 'There was an error getting your current global config');
+			toaster.error({ title: 'There was an error getting your current global config'});
 		}
 
 		isDoingSomething = false;
 	};
 
-	$: if (!!$isFullyInitialized && !$deviceConfig?.globalConfig) {
-		loadGlobalConfig();
-	}
+	run(() => {
+		if (!!$isFullyInitialized && !$deviceConfig?.globalConfig) {
+			loadGlobalConfig();
+		}
+	});
 
 	const saveGlobal = async () => {
 		isDoingSomething = true;
@@ -102,11 +104,11 @@
 						inquiryMode
 					}
 				}));
+				toaster.success({ title: 'Success updating global configuration!'});
 
-				sendToast('success', 'Success updating global configuration!');
 			} catch (error) {
 				console.log('there was an error saving the global config', error);
-				sendToast('error', 'There was an error saving the global config');
+				toaster.error({ title: 'There was an error saving the global config'});
 			}
 		}
 		isDoingSomething = false;
@@ -149,11 +151,11 @@
 <button
 	disabled={!$isFullyInitialized || isDoingSomething}
 	type="button"
-	class="btn variant-filled flex-row gap-4"
-	on:click={saveGlobal}
+	class="btn preset-filled flex-row gap-4"
+	onclick={saveGlobal}
 >
 	Save
 	{#if $isFullyInitialized && isDoingSomething}
-		<ProgressRadial width="w-6" />
+		<ProgressRing classes="w-6 h-6" value={null} />
 	{/if}
 </button>

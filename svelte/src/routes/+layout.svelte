@@ -1,41 +1,30 @@
 <script lang="ts">
-	import '../app.postcss';
-	import {
-		AppShell,
-		AppBar,
-		ProgressRadial,
-		Drawer,
-		Toast,
-		storePopup,
-		initializeStores,
-		getDrawerStore,
-		getToastStore,
-		popup,
-		type PopupSettings
-	} from '@skeletonlabs/skeleton';
+	import '../app.css';
+	import { Toaster, ProgressRing, Modal } from '@skeletonlabs/skeleton-svelte';
 	import {
 		IconBrandGithub,
 		IconBrandDiscord,
 		IconMenu2,
-		IconBluetoothConnected
+		IconBluetoothConnected,
+
+		IconDownload
+
 	} from '@tabler/icons-svelte';
-	import { deviceConfig, device, service, isFullyInitialized } from '$lib/stores';
+	import { deviceConfig, device, service, latestVersion } from '$lib/stores';
 	import { NavigationMenu } from '$lib/components';
-	import { getSendToast, getService } from '$lib/utilities';
+	import { getService, toaster } from '$lib/utilities';
+	import { urlLatestRelease } from '$lib/constants';
+	import { onMount } from 'svelte';
 
-	// Floating UI for Popups
-	import { computePosition, autoUpdate, flip, shift, offset, arrow } from '@floating-ui/dom';
-	storePopup.set({ computePosition, autoUpdate, flip, shift, offset, arrow });
+	interface Props {
+		children?: import('svelte').Snippet;
+	}
 
-	initializeStores();
-	const drawerStore = getDrawerStore();
-	const sendToast = getSendToast(getToastStore());
-	let isGettingService = false;
+	let { children }: Props = $props();
 
-	let connectedPopup: PopupSettings = {
-		target: 'connectedPopup',
-		event: 'click'
-	};
+	let isGettingService = $state(false);
+	let isDrawerOpen = $state(false);
+	let isConnectedModalOpen = $state(false);
 
 	const unselectDevice = () => {
 		device.set(undefined);
@@ -47,17 +36,25 @@
 		isGettingService = true;
 		try {
 			await getService();
-			sendToast('success', `Successfully connected to the BlueRetro service`);
+			toaster.success({ title: 'Successfully connected to the BlueRetro service' });
 			isGettingService = false;
 		} catch (error) {
 			console.log('Error initializing device', error);
-			sendToast('error', `Error initializing connection to BlueRetro device`);
+			toaster.error({ title: 'Error initializing connection to BlueRetro device' });
 			isGettingService = false;
 		}
 	};
 
+	onMount(async () => {
+		const response = await fetch(urlLatestRelease);
+		const json = await response.json();
+		latestVersion.set(json.tag_name);
+	});
+
+	let upgradeAvailable = $derived($latestVersion && $deviceConfig?.appVersion?.indexOf($latestVersion) == -1);
+
 	const onMenuClick = () => {
-		drawerStore.open({});
+		isDrawerOpen = true;
 	};
 
 	const onSwitchDeviceClick = async () => {
@@ -66,6 +63,7 @@
 		}
 		unselectDevice();
 		await initializeDevice();
+		isConnectedModalOpen = false;
 	};
 
 	const onDisconnectClick = async () => {
@@ -73,71 +71,112 @@
 			$device.gatt.disconnect();
 		}
 		unselectDevice();
+		isConnectedModalOpen = false;
 	};
 </script>
 
-<Drawer>
-	<NavigationMenu />
-</Drawer>
+<Modal
+	open={isDrawerOpen}
+	onOpenChange={(e: any) => (isDrawerOpen = e.open)}
+	triggerBase="btn preset-tonal"
+	contentBase="bg-surface-100-900 p-4 space-y-4 shadow-xl w-[200px] h-screen"
+	positionerJustify="justify-start"
+	positionerAlign=""
+	positionerPadding=""
+	transitionsPositionerIn={{ x: -480, duration: 200 }}
+	transitionsPositionerOut={{ x: -480, duration: 200 }}
+>
+	{#snippet content()}
+		<NavigationMenu onItemSelect={() => (isDrawerOpen = false)} />
+	{/snippet}
+</Modal>
 <!-- App Shell -->
-<AppShell slotSidebarLeft="bg-surface-500/5 md:w-56 w-0 md:p-4">
-	<svelte:fragment slot="header">
-		<!-- App Bar -->
-		<AppBar background="bg-surface-700" padding="p-2 md:p-4">
-			<svelte:fragment slot="lead">
-				<div class="flex flex-row gap-4 items-center">
-					<img src="/icon.png" alt="blueretro icon" class="h-12 pl-2 hidden md:flex" />
-					<button class="btn btn-icon md:hidden text-white" on:click={onMenuClick}>
-						<IconMenu2 />
-					</button>
-					<strong class="text-xl text-white">BlueRetro</strong>
-				</div>
-				{#if !!$device}
-					<button class=" btn btn-icon text-white" use:popup={connectedPopup}>
-						<IconBluetoothConnected />
-					</button>
-				{/if}
-			</svelte:fragment>
-			<svelte:fragment slot="trail">
-				<div>
-					<a
-						class="btn-icon text-white"
-						href="https://discord.gg/EXqV7W8MtY"
-						target="_blank"
-						rel="noreferrer"
-					>
-						<IconBrandDiscord />
-					</a>
-					<a
-						class="btn-icon text-white"
-						href="https://github.com/darthcloud/BlueRetro"
-						target="_blank"
-						rel="noreferrer"
-					>
-						<IconBrandGithub />
-					</a>
-				</div>
-			</svelte:fragment>
-		</AppBar>
-	</svelte:fragment>
-	<svelte:fragment slot="sidebarLeft">
-		<NavigationMenu />
-	</svelte:fragment>
-	{#if !$isFullyInitialized}
-		<div class="p-4 flex gap-4 flex md:flex-row flex-col max-w-screen-md">
-			<div class="flex flex-col gap-4 flex-1">
+<div class="grid grid-rows-[auto_1fr_auto]">
+	<!-- App Bar -->
+	<header class="bg-surface-700 p-2 md:p-2 flex flex-row  items-center justify-between">
+		<div class="flex flex-row gap-4 items-center">
+			<img src="/icon.png" alt="blueretro icon" class="h-9 pl-2 hidden md:flex" />
+			<button class="btn btn-icon md:hidden text-white" onclick={onMenuClick}>
+				<IconMenu2 />
+			</button>
+			<strong class="text-xl text-white">BlueRetro</strong>
+		</div>
+		<div>
+			<a
+				class="btn-icon text-white"
+				href="https://discord.gg/EXqV7W8MtY"
+				target="_blank"
+				rel="noreferrer"
+			>
+				<IconBrandDiscord />
+			</a>
+			<a
+				class="btn-icon text-white"
+				href="https://github.com/darthcloud/BlueRetro"
+				target="_blank"
+				rel="noreferrer"
+			>
+				<IconBrandGithub />
+			</a>
+		</div>
+	</header>
+	<div class="flex flex-row">
+		<aside
+			class="bg-surface-500/5 md:p-4 sticky top-0 w-[200px] hidden h-screen md:block"
+		>
+			<NavigationMenu />
+		</aside>
+		<div class="flex-1 flex flex-col">
+			<div class="border rounded-base border-primary-500 mt-4 ml-4 mr-4 p-4 gap-4 flex lg:flex-row flex-col">
 				{#if isGettingService}
 					<div
-						class="border-token rounded-token border-primary-500 flex text-xl font-bold flex-start gap-4 p-4 justify-center items-center"
+						class="flex text-xl font-bold flex-start gap-4 p-4 justify-center items-center"
 					>
 						Connecting
 
-						<ProgressRadial width="w-10" />
+						<ProgressRing classes="w-10 h-10" value={null} />
 					</div>
+				{:else if $deviceConfig && $device}
+						<Modal
+							open={isConnectedModalOpen}
+							onOpenChange={(e: any) => (isConnectedModalOpen = e.open)}
+							triggerBase="btn btn preset-tonal"
+							contentBase="p-4 space-y-4 shadow-xl max-w-screen-sm"
+							backdropClasses="backdrop-blur-sm"
+						>
+							{#snippet trigger()}
+								<!-- <button class="btn btn-icon h-10"> -->
+									<IconBluetoothConnected class="h-10" />
+
+									<div class="flex sm:flex-row gap-4 flex-col" >
+									<div class="flex flex-row gap-4"><div class="font-bold"> Connection:</div> {$device?.name || '...'} </div>
+									<div class="flex flex-row gap-4">
+										<div class="font-bold">Version:</div>
+										{$deviceConfig?.appVersion || '...'}
+									</div>
+								</div>
+								<!-- </button> -->
+							{/snippet}
+							{#snippet content()}
+								<div class="card p-4 max-w-sm">
+									<div class="grid grid-cols-1 gap-2">
+										<button class="btn" onclick={onDisconnectClick}>Disconnect</button>
+										<button class="btn" onclick={onSwitchDeviceClick}>Switch Device</button>
+									</div>
+									<div class="arrow bg-surface-100-900"></div>
+								</div>
+							{/snippet}
+						</Modal>
+						{#if upgradeAvailable}
+							<a class="btn preset-tonal-tertiary" href="/system/update">
+								Upgrade Available!
+								<IconDownload class="size-4" />
+							</a>
+						{/if}
 				{:else}
 					<div class="flex-col">
 						<div class="flex gap-4 items-center">
-							<button type="button" class="btn variant-filled" on:click={initializeDevice}>
+							<button type="button" class="btn preset-filled" onclick={initializeDevice}>
 								Select Device
 							</button>
 						</div>
@@ -146,21 +185,17 @@
 					</div>
 				{/if}
 			</div>
-		</div>
-	{/if}
 
-	<div class="p-4 flex flex-col gap-4 max-w-screen-md">
-		<slot />
+			<div class="p-4 flex flex-col gap-4 max-w-(--breakpoint-md)">
+				{@render children?.()}
+			</div>
+		</div>
 	</div>
-	<Toast position="t" />
+	
+
+	
 
 	<!-- Page Route Content -->
-</AppShell>
-
-<div class="card p-4 max-w-sm" data-popup="connectedPopup">
-	<div class="grid grid-cols-1 gap-2">
-		<button class="btn" on:click={onDisconnectClick}>Disconnect</button>
-		<button class="btn" on:click={onSwitchDeviceClick}>Switch Device</button>
-	</div>
-	<div class="arrow bg-surface-100-800-token" />
 </div>
+
+<Toaster {toaster}></Toaster>
