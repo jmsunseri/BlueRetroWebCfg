@@ -85,24 +85,43 @@
 				</label>
 			</div>
 			{#if isShowingMore}
-				<Slider name="range-slider" bind:value={max} max={maxMax} step={5} ticked>
-					<div class="flex justify-between items-center">
-						<div class="font-bold">Max</div>
-						<div class="text-xs">{max} / {maxMax}</div>
-					</div>
-				</Slider>
-				<Slider name="range-slider" bind:value={threshold} max={maxThres} step={5} ticked>
-					<div class="flex justify-between items-center">
-						<div class="font-bold">Threshold</div>
-						<div class="text-xs">{threshold} / {maxThres}</div>
-					</div>
-				</Slider>
-				<Slider name="range-slider" bind:value={deadzone} max={maxMax} step={5} ticked>
-					<div class="flex justify-between items-center">
-						<div class="font-bold">Deadzone</div>
-						<div class="text-xs">{max / 1000}% / {maxMax / 1000}%</div>
-					</div>
-				</Slider>
+				<Slider 
+					name="range-slider" 
+					value={[max]} 
+					max={maxMax} 
+					markers={[...Array(Math.floor(maxMax / 15)).keys().map(x => x * 15), maxMax]} 
+					onValueChange={(e) => (max = e.value[0])}
+					step={5}
+				/>
+				<div class="flex justify-between items-center">
+					<div class="font-bold">Max</div>
+					<div class="text-xs">{max} / {maxMax}</div>
+				</div>
+				<Slider 
+					name="range-slider" 
+					value={[threshold]} 
+					max={maxThres} 
+					step={5} 
+					markers={[...Array(Math.floor(maxThres / 5)).keys().map(x => x * 5), maxThres]}
+					onValueChange={(e) => (threshold = e.value[0])}
+				/>
+				<div class="flex justify-between items-center">
+					<div class="font-bold">Threshold</div>
+					<div class="text-xs">{threshold} / {maxThres}</div>
+				</div>
+				<Slider 
+					name="range-slider" 
+					value={[deadzone]} 
+					max={maxMax} 
+					markers={[...Array(Math.floor(maxMax / 15)).keys().map(x => x * 15), maxMax]} 
+					onValueChange={(e) => (deadzone = e.value[0])}
+					step={5}
+					
+				/>
+				<div class="flex justify-between items-center">
+					<div class="font-bold">Deadzone</div>
+					<div class="text-xs">{deadzone / 1000}% / {maxMax / 1000}%</div>
+				</div>
 				<div class="flex flex-col gap-4 md:flex-row">
 					<label class="label">
 						<span>Turbo</span>

@@ -71,7 +71,7 @@
 	>
 		Deep Sleep
 		{#if isSettingDeepSleep}
-			<ProgressRing width="w-6" />
+			<ProgressRing classes="w-6 h-6" value={null} />
 		{/if}
 	</button>
 	<button
@@ -81,7 +81,7 @@
 	>
 		Reset
 		{#if isResetting}
-			<ProgressRing width="w-6" />
+			<ProgressRing classes="w-6 h-6" value={null} />
 		{/if}
 	</button>
 	<button
@@ -91,7 +91,7 @@
 	>
 		Factory Reset
 		{#if isFactoryResetting}
-			<ProgressRing width="w-6" />
+			<ProgressRing classes="w-6 h-6" value={null} />
 		{/if}
 	</button>
 </div>

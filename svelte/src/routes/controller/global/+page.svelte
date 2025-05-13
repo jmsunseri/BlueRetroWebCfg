@@ -156,6 +156,6 @@
 >
 	Save
 	{#if $isFullyInitialized && isDoingSomething}
-		<ProgressRing width="w-6" />
+		<ProgressRing classes="w-6 h-6" value={null} />
 	{/if}
 </button>

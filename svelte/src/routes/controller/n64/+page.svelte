@@ -2,8 +2,9 @@
 	import { FileUpload, ProgressRing } from '@skeletonlabs/skeleton-svelte';
 	import { block, brUuid, mtu, pakSize } from '$lib/constants';
 	import { downloadFile, toaster, getService } from '$lib/utilities';
-	import { isFullyInitialized } from '$lib/stores';
+	import { isFullyInitialized, device } from '$lib/stores';
 	import { UploadProgress } from '$lib/components';
+	import { IconUpload, IconX } from '@tabler/icons-svelte';
 
 	let pakNumber = $state(0);
 	let progress = $state(0);
@@ -207,6 +208,13 @@
 	const cancelClick = () => {
 		isCanceling = true;
 	};
+
+	const onFileChange = (details: any) => {
+		files = details.acceptedFiles;
+	}
+	const removeFile = () => {
+		files = undefined;
+	}
 </script>
 
 <div class="flex flex-col gap-4 p-4">
@@ -227,7 +235,7 @@
 		>
 			Read
 			{#if $isFullyInitialized && isReading}
-				<ProgressRing width="w-6" />
+				<ProgressRing classes="w-6 h-6" value={null} />
 			{/if}
 		</button>
 
@@ -238,19 +246,37 @@
 		>
 			Format
 			{#if $isFullyInitialized && isFormatting}
-				<ProgressRing width="w-6" />
+				<ProgressRing classes="w-6 h-6" value={null} />
 			{/if}
 		</button>
 
 		<div class="flex flex-row items-center gap-4">
+			{#if !files?.length}
 			<FileUpload
 				name="files"
-				bind:files
-				button="btn preset-tonal border border-surface-500 flex-row gap-4"
-				disabled={isDoingSomething || !$isFullyInitialized}>Upload</FileUpload
-			>
-
-			<p>Select .MPK file to write</p>
+				onFileChange={onFileChange} maxFiles={1}
+				disabled={isDoingSomething || !$device}>
+				
+				<button class="btn preset-tonal border border-surface-500">
+					<IconUpload class="size-4" />
+					<span>Select .MPK file</span>
+				</button>
+				</FileUpload>
+			{:else}
+				<div class="flex flex-row gap-2 items-center">
+					<div>
+						{files[0].name}
+					</div>
+					<button
+						onclick={removeFile}
+						class="btn"
+						disabled={isDoingSomething}
+					>
+						<IconX class="text-red-800 border border-red-800 rounded-md" />
+					</button>
+				</div>
+				
+			{/if}
 		</div>
 
 		<button
@@ -260,7 +286,7 @@
 		>
 			Write
 			{#if $isFullyInitialized && isWriting}
-				<ProgressRing width="w-6" />
+				<ProgressRing classes="w-6 h-6" value={null} />
 			{/if}
 		</button>
 	</div>

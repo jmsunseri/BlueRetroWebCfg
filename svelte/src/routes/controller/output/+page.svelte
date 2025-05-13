@@ -85,10 +85,10 @@
 	disabled={!$isFullyInitialized || isDoingSomething}
 	onclick={saveOutputConfig}
 	type="button"
-	class="btn preset-filled flex-row gap-4"
+	class="btn preset-filled flex flex-row gap-4"
 >
 	Save
 	{#if $isFullyInitialized && isDoingSomething}
-		<ProgressRing width="w-6" />
+		<ProgressRing classes="w-6 h-6" value={null} />
 	{/if}
 </button>

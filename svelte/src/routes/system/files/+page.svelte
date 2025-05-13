@@ -96,10 +96,11 @@
 
 {#if isDoingSomething && !$deviceConfig?.files}
 	<div class="flex flex-col items-center gap-4 p-4">
-		<ProgressRing width="w-24" />
+		<ProgressRing classes="w-6 h-6" value={null} />
 		Fetching Files...
 	</div>
 {:else}
+<div class="flex flex-row">
 	<ul class="list flex-col flex-none">
 		{#if $device && $deviceConfig?.files?.length}
 			{#each $deviceConfig.files as file, i}
@@ -111,7 +112,7 @@
 						disabled={isDoingSomething}
 					>
 						{#if deletingFileNumber === i}
-							<ProgressRing width="w-6" />
+							<ProgressRing classes="w-6 h-6" value={null} />
 						{:else}
 							<IconTrash />
 						{/if}
@@ -120,4 +121,5 @@
 			{/each}
 		{/if}
 	</ul>
+</div>
 {/if}

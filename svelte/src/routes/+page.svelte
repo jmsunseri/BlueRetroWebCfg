@@ -6,7 +6,7 @@
 	</div>
 </div>
 
-<style lang="postcss">
+<!-- <style lang="postcss">
 	@keyframes glow {
 		0% {
 			@apply bg-primary-400/50;
@@ -26,4 +26,4 @@
 			transform: scale(1.5);
 		}
 	}
-</style>
+</style> -->

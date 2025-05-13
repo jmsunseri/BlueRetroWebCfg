@@ -153,11 +153,10 @@
 	class="btn preset-filled flex-row gap-4"
 	onclick={writeConfiguration}
 >
-	Save Mappings
 	{#if $isFullyInitialized && isDoingSomething}
-		<ProgressRing width="w-6" />
+		Getting Mappings<ProgressRing classes="w-6 h-6" value={null} />
 	{:else}
-		<IconDeviceFloppy />
+		Save Mappings<IconDeviceFloppy />
 	{/if}
 </button>
 
