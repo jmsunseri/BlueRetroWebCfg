@@ -7,7 +7,7 @@
 	import { maxMainInput, labelName as deviceLabels, brUuid, maxMappings } from '$lib/constants';
 	import { isFullyInitialized } from '$lib/stores';
 	import { getService, toaster, writeInputConfig } from '$lib/utilities';
-	import { ProgressRing } from '@skeletonlabs/skeleton-svelte';
+	import { ProgressRing, Switch } from '@skeletonlabs/skeleton-svelte';
 
 	let source: number = $state(0);
 	let input: number = $state(0);
@@ -15,6 +15,7 @@
 	let buttonMappings: Array<IButtonMapping> = $state([]);
 	let gameId: string = $state('');
 	let isDoingSomething = $state(false);
+	let hideNotSelected = $state(true);
 
 	const removeMapping = (index: number) => {
 		buttonMappings = buttonMappings.filter((_, i) => index != i);
@@ -25,6 +26,8 @@
 			buttonMappings = [...buttonMappings, { max: 100, threshold: 50, deadzone: 135 }];
 		}
 	};
+
+  
 
 	const loadInputConfiguration = async (inputNumber: number) => {
 		if (!isNaN(inputNumber)) {
@@ -147,6 +150,16 @@
 		</select>
 	</label>
 </div>
+<label class="label flex flex-row gap-2 align-center">
+	<span>Hide mappings not relevant to source and destination</span>
+	<Switch 
+		name="example" 
+		checked={hideNotSelected} 
+		onCheckedChange={(e) => (hideNotSelected = e.checked)} 
+		label="Hide mappings not relevant to source and destination" 
+	/>
+</label>
+
 
 <button
 	disabled={!$isFullyInitialized}
@@ -176,6 +189,7 @@
 			bind:destinationId={mapping.destinationId}
 			bind:deadzone={mapping.deadzone}
 			bind:threshold={mapping.threshold}
+			{hideNotSelected}
 		/>
 	{/each}
 {/if}

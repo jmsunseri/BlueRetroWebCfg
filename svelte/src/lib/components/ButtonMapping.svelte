@@ -28,6 +28,7 @@
 		turbo?: number | undefined;
 		scaling?: number | undefined;
 		diagonal?: number | undefined;
+		hideNotSelected: boolean
 	}
 
 	let {
@@ -35,6 +36,7 @@
 		destinationSystem,
 		onRemoveClicked,
 		index,
+		hideNotSelected,
 		source = $bindable(undefined),
 		destination = $bindable(undefined),
 		destinationId = $bindable(undefined),
@@ -51,8 +53,15 @@
 	const toggleShowMore = () => {
 		isShowingMore = !isShowingMore;
 	};
+let shouldBeHidden = $derived( hideNotSelected 
+	&& !btnList[source ?? -1][sourceSystem]
+	&& !btnList[destination ?? -1][destinationSystem]
+)
+
 </script>
 
+{#if !shouldBeHidden}
+	
 <div class="border rounded-base border-primary-500 flex flex-col gap-4">
 	<div class="flex flex-row flex-start gap-4 justify-between">
 		<div class="flex flex-col gap-4 pl-4 pt-4 flex-1">
@@ -169,3 +178,5 @@
 		</button>
 	</div>
 </div>
+{/if}
+
