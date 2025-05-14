@@ -1,1 +1,1 @@
-type ControllerConfigType = 'global' | 'gameid'
+type ControllerConfigType = 'global' | 'gameid' | 'console'

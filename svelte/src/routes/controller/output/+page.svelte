@@ -43,7 +43,7 @@
 
 			chrc = await serv.getCharacteristic(brUuid[3]);
 			await chrc.writeValue(data);
-			toaster.error({ title: `Success updating output ${output + 1}`});
+			toaster.success({ title: `Success updating output ${output + 1}`});
 		} catch (error) {
 			console.log(`There was and error trying to save output ${output + 1}`, error);
 			toaster.error({ title: `There was an error trying to save output ${output + 1}!`});

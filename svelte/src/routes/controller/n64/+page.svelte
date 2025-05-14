@@ -254,10 +254,11 @@
 			{#if !files?.length}
 			<FileUpload
 				name="files"
+				classes="w-full"
 				onFileChange={onFileChange} maxFiles={1}
 				disabled={isDoingSomething || !$device}>
 				
-				<button class="btn preset-tonal border border-surface-500">
+				<button class="btn preset-tonal border border-surface-500 w-full">
 					<IconUpload class="size-4" />
 					<span>Select .MPK file</span>
 				</button>

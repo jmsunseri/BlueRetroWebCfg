@@ -91,14 +91,15 @@
 	{/snippet}
 </Modal>
 <!-- App Shell -->
-<div class="grid grid-rows-[auto_1fr_auto]">
+<div class="overflow-hidden h-dvh flex flex-col">
 	<!-- App Bar -->
 	<header class="bg-surface-700 p-2 md:p-2 flex flex-row  items-center justify-between">
-		<div class="flex flex-row gap-4 items-center">
-			<img src="/icon.png" alt="blueretro icon" class="h-9 pl-2 hidden md:flex" />
-			<button class="btn btn-icon md:hidden text-white" onclick={onMenuClick}>
+		<div class="flex flex-row md:gap-4 gap-2 items-center">
+			
+			<button class="btn md:hidden text-white" onclick={onMenuClick}>
 				<IconMenu2 />
 			</button>
+			<img src="/icon.png" alt="blueretro icon" class="h-9 md:pl-2" />
 			<strong class="text-xl text-white">BlueRetro</strong>
 		</div>
 		<div>
@@ -120,14 +121,14 @@
 			</a>
 		</div>
 	</header>
-	<div class="flex flex-row">
+	<div class="flex flex-row overflow-hidden flex-1">
 		<aside
 			class="bg-surface-500/5 md:p-4 sticky top-0 w-[200px] hidden h-screen md:block"
 		>
 			<NavigationMenu />
 		</aside>
 		<div class="flex-1 flex flex-col">
-			<div class="border rounded-base border-primary-500 mt-4 ml-4 mr-4 p-4 gap-4 flex lg:flex-row flex-col">
+			<div class="p-2 md:p-4 gap-4 flex lg:flex-row flex-col">
 				{#if isGettingService}
 					<div
 						class="flex text-xl font-bold flex-start gap-4 p-4 justify-center items-center"
@@ -140,19 +141,28 @@
 						<Modal
 							open={isConnectedModalOpen}
 							onOpenChange={(e: any) => (isConnectedModalOpen = e.open)}
-							triggerBase="btn btn preset-tonal"
+							triggerBase="btn btn preset-tonal border rounded-base border-tertiary-500"
 							contentBase="p-4 space-y-4 shadow-xl max-w-screen-sm"
 							backdropClasses="backdrop-blur-sm"
 						>
 							{#snippet trigger()}
 								<!-- <button class="btn btn-icon h-10"> -->
-									<IconBluetoothConnected class="h-10" />
+								<IconBluetoothConnected class="h-10" />
 
+								<div class="flex flex-col" >
 									<div class="flex sm:flex-row gap-4 flex-col" >
-									<div class="flex flex-row gap-4"><div class="font-bold"> Connection:</div> {$device?.name || '...'} </div>
-									<div class="flex flex-row gap-4">
-										<div class="font-bold">Version:</div>
-										{$deviceConfig?.appVersion || '...'}
+										<div class="flex flex-row gap-4">
+											<div class="font-bold"> Connection:</div>
+											{$device?.name || '...'} 
+										</div>
+										<div class="flex flex-row gap-4">
+											<div class="font-bold">Version:</div>
+											{$deviceConfig?.appVersion || '...'}
+										</div>
+									</div>
+									<div class="flex flex-row gap-4 justify-center">
+										<div class="font-bold">Address:</div>
+										{$deviceConfig?.bluetoothAddress || '...'}
 									</div>
 								</div>
 								<!-- </button> -->
@@ -168,7 +178,7 @@
 							{/snippet}
 						</Modal>
 						{#if upgradeAvailable}
-							<a class="btn preset-tonal-tertiary" href="/system/update">
+							<a class="btn preset-tonal-tertiary border rounded-base border-tertiary-500" href="/system/update">
 								Upgrade Available!
 								<IconDownload class="size-4" />
 							</a>
@@ -186,15 +196,11 @@
 				{/if}
 			</div>
 
-			<div class="p-4 flex flex-col gap-4 max-w-(--breakpoint-md)">
+			<div class="p-2 md:p-4 flex flex-col gap-4 max-w-2xl overflow-auto flex-1">
 				{@render children?.()}
 			</div>
 		</div>
 	</div>
-	
-
-	
-
 	<!-- Page Route Content -->
 </div>
 

@@ -54,8 +54,8 @@
 </script>
 
 <div class="border rounded-base border-primary-500 flex flex-col gap-4">
-	<div class="flex flex-row flex-start gap-4">
-		<div class="flex flex-col gap-4 pl-4 pt-4">
+	<div class="flex flex-row flex-start gap-4 justify-between">
+		<div class="flex flex-col gap-4 pl-4 pt-4 flex-1">
 			<div class="flex flex-col gap-4 md:flex-row">
 				<label class="label">
 					<span>Source</span>
@@ -66,7 +66,7 @@
 					</select>
 				</label>
 
-				<label class="label">
+				<label class="label ">
 					<span>Destination</span>
 					<select class="select" bind:value={destination}>
 						{#each btnList as button, i}
