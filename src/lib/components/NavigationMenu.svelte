@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { page } from '$app/state';
 
 	interface Props {
@@ -18,18 +19,18 @@
 			<a
 				onclick={onItemSelect}
 				class={classesActive('/controller/global')}
-				href="/controller/global">Global</a
+				href="{base}/controller/global">Global</a
 			>
 		</li>
 		<li class="pl-4">
 			<a
 				onclick={onItemSelect}
 				class={classesActive('/controller/output')}
-				href="/controller/output">Output</a
+				href="{base}/controller/output">Output</a
 			>
 		</li>
 		<li class="pl-4">
-			<a onclick={onItemSelect} class={classesActive('/controller/n64')} href="/controller/n64"
+			<a onclick={onItemSelect} class={classesActive('/controller/n64')} href="{base}/controller/n64"
 				>N64 Controller Pack</a
 			>
 		</li>
@@ -40,14 +41,14 @@
 					<a
 						onclick={onItemSelect}
 						class={classesActive('/controller/presets')}
-						href="/controller/presets">Presets</a
+						href="{base}/controller/presets">Presets</a
 					>
 				</li>
 				<li>
 					<a
 						onclick={onItemSelect}
 						class={classesActive('/controller/buttons')}
-						href="/controller/buttons">Custom</a
+						href="{base}/controller/buttons">Custom</a
 					>
 				</li>
 			</ul>
@@ -55,17 +56,17 @@
 
 		<p class="font-bold text-xl">System</p>
 		<li class="pl-4">
-			<a onclick={onItemSelect} class={classesActive('/system/files')} href="/system/files"
+			<a onclick={onItemSelect} class={classesActive('/system/files')} href="{base}/system/files"
 				>Files</a
 			>
 		</li>
 		<li class="pl-4">
-			<a onclick={onItemSelect} class={classesActive('/system/manage')} href="/system/manage"
+			<a onclick={onItemSelect} class={classesActive('/system/manage')} href="{base}/system/manage"
 				>Manage</a
 			>
 		</li>
 		<li class="pl-4">
-			<a onclick={onItemSelect} class={classesActive('/system/update')} href="/system/update"
+			<a onclick={onItemSelect} class={classesActive('/system/update')} href="{base}/system/update"
 				>Update</a
 			>
 		</li>
