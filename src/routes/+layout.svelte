@@ -26,6 +26,7 @@
 	let isGettingService = $state(false);
 	let isDrawerOpen = $state(false);
 	let isConnectedModalOpen = $state(false);
+	let isIntentionallyDisconnecting = $state(false);
 
 	const unselectDevice = () => {
 		device.set(undefined);
@@ -68,12 +69,28 @@
 	};
 
 	const onDisconnectClick = async () => {
+		isIntentionallyDisconnecting = true;
 		if ($device?.gatt?.connected) {
 			$device.gatt.disconnect();
 		}
 		unselectDevice();
 		isConnectedModalOpen = false;
 	};
+
+	const onDisconnectedListener = async (_: Event) => {
+		if(isIntentionallyDisconnecting) {
+			isIntentionallyDisconnecting = false;
+		} else {
+			toaster.error({ title: 'The connection to the BlueRetro device was lost. Attempting to reestablish a connection' });
+			deviceConfig.set(undefined);
+			service.set(undefined);
+			await initializeDevice();
+		}
+	}
+
+	$effect(() => {
+		$device?.addEventListener('gattserverdisconnected', onDisconnectedListener)
+	})
 </script>
 
 <Modal
