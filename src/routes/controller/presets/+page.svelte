@@ -6,6 +6,7 @@
 	import { getService, toaster, writeInputConfig } from '$lib/utilities';
 	import { GameId } from '$lib/components';
 	import { ProgressRing } from '@skeletonlabs/skeleton-svelte';
+	import { base } from '$app/paths';
 
 	const consoles: { [key: string]: IPreset[] } = $state({});
 	let preset: IPreset | undefined = $state(undefined);
@@ -23,7 +24,7 @@
 
 	const fetchMap = async (files: IPresetFile[]) => {
 		files.forEach(async (presetFile) => {
-			const response = await fetch('/config/presets/' + presetFile.name);
+			const response = await fetch(`${base}/config/presets/` + presetFile.name);
 			const p: IPreset = await response.json();
 			consoles[p.console] = [...(consoles[p.console] || []), p];
 		});
