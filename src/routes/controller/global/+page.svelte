@@ -144,6 +144,7 @@
 		{#each { length: 4 } as _, i}
 			<option value={i}>Bank {i + 1}</option>
 		{/each}
+		<option value={219}>Debug Mode</option>
 	</select>
 </label>
 
