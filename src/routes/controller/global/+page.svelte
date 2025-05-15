@@ -116,7 +116,7 @@
 
 <label class="label">
 	<span>System</span>
-	<select class="select" bind:value={system} disabled={isDoingSomething}>
+	<select class="select" bind:value={system} disabled={isDoingSomething || !$isFullyInitialized}>
 		{#each systems as s, i}
 			<option value={i}>{s}</option>
 		{/each}
@@ -124,7 +124,7 @@
 </label>
 <label class="label">
 	<span>Multitap</span>
-	<select class="select" bind:value={multitap} disabled={isDoingSomething}>
+	<select class="select" bind:value={multitap} disabled={isDoingSomething || !$isFullyInitialized}>
 		{#each multitaps as m, i}
 			<option value={i}>{m}</option>
 		{/each}
@@ -132,7 +132,7 @@
 </label>
 <label class="label">
 	<span>Inquiry Mode</span>
-	<select class="select" bind:value={inquiryMode} disabled={isDoingSomething}>
+	<select class="select" bind:value={inquiryMode} disabled={isDoingSomething || !$isFullyInitialized}>
 		{#each inquiryModes as m, i}
 			<option value={i}>{m}</option>
 		{/each}
@@ -140,7 +140,7 @@
 </label>
 <label class="label">
 	<span>Memory Card Bank</span>
-	<select class="select" bind:value={bank} disabled={isDoingSomething}>
+	<select class="select" bind:value={bank} disabled={isDoingSomething || !$isFullyInitialized}>
 		{#each { length: 4 } as _, i}
 			<option value={i}>Bank {i + 1}</option>
 		{/each}
