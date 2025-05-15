@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
 	import { deviceConfig, isFullyInitialized } from '$lib/stores';
 	import {
 		systemCfg as systems,
@@ -64,8 +62,9 @@
 		isDoingSomething = false;
 	};
 
-	run(() => {
+	$effect.pre(() => {
 		if (!!$isFullyInitialized && !$deviceConfig?.globalConfig) {
+			console.log('loading global config');
 			loadGlobalConfig();
 		}
 	});

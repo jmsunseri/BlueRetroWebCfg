@@ -50,6 +50,12 @@
 		}
 		isDoingSomething = false;
 	};
+
+	$effect.pre(() => {
+		if($isFullyInitialized) {
+			loadOutputConfig();
+		}
+	})
 </script>
 
 <label class="label">
