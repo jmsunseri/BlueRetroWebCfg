@@ -28,7 +28,7 @@ jobs:
 
       - name: build
         env:
-         BASE_PATH: '/${{ github.event.repository.blueretrowebcfg }}'
+         BASE_PATH: '/${{ github.event.repository.name }}'
         run: pnpm build
 
       - name: Upload Artifacts
