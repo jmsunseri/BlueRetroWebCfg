@@ -6,9 +6,7 @@
 		IconBrandDiscord,
 		IconMenu2,
 		IconBluetoothConnected,
-
 		IconDownload
-
 	} from '@tabler/icons-svelte';
 	import { deviceConfig, device, service, latestVersion } from '$lib/stores';
 	import { NavigationMenu } from '$lib/components';
@@ -16,7 +14,6 @@
 	import { urlLatestRelease } from '$lib/constants';
 	import { onMount } from 'svelte';
 	import { base } from '$app/paths';
-	import { get } from 'http';
 
 	interface Props {
 		children?: import('svelte').Snippet;
@@ -112,18 +109,18 @@
 <!-- App Shell -->
 <div class="overflow-hidden h-dvh flex flex-col">
 	<!-- App Bar -->
-	<header class="bg-surface-700 p-2 md:p-2 flex flex-row  items-center justify-between">
+	<header class="preset-filled-surface-100-900 border-bottom p-2 md:p-2 flex flex-row  items-center justify-between">
 		<div class="flex flex-row md:gap-4 gap-2 items-center">
 			
-			<button class="btn md:hidden text-white" onclick={onMenuClick}>
+			<button class="btn md:hidden" onclick={onMenuClick}>
 				<IconMenu2 />
 			</button>
 			<img src="{base}/icon.png" alt="blueretro icon" class="h-9 md:pl-2" />
-			<strong class="text-xl text-white">BlueRetro</strong>
+			<strong class="text-xl">BlueRetro</strong>
 		</div>
 		<div>
 			<a
-				class="btn-icon text-white"
+				class="btn-icon"
 				href="https://discord.gg/EXqV7W8MtY"
 				target="_blank"
 				rel="noreferrer"
@@ -131,7 +128,7 @@
 				<IconBrandDiscord />
 			</a>
 			<a
-				class="btn-icon text-white"
+				class="btn-icon"
 				href="https://github.com/darthcloud/BlueRetro"
 				target="_blank"
 				rel="noreferrer"
