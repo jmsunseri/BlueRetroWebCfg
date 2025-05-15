@@ -4,7 +4,6 @@
 @import "@skeletonlabs/skeleton/themes/hamlindigo";
 @source "../node_modules/@skeletonlabs/skeleton-svelte/dist";
 
-@config '../tailwind.config.ts';
 
 /*
   The default border color has changed to `currentcolor` in Tailwind CSS v4,

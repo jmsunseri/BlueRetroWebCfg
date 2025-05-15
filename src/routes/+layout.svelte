@@ -16,6 +16,7 @@
 	import { urlLatestRelease } from '$lib/constants';
 	import { onMount } from 'svelte';
 	import { base } from '$app/paths';
+	import { get } from 'http';
 
 	interface Props {
 		children?: import('svelte').Snippet;
@@ -80,7 +81,7 @@
 	const onDisconnectedListener = async (_: Event) => {
 		if(isIntentionallyDisconnecting) {
 			isIntentionallyDisconnecting = false;
-		} else {
+		} else if($device) {
 			toaster.error({ title: 'The connection to the BlueRetro device was lost. Attempting to reestablish a connection' });
 			deviceConfig.set(undefined);
 			service.set(undefined);
@@ -149,10 +150,9 @@
 			<div class="p-2 md:p-4 gap-4 flex lg:flex-row flex-col">
 				{#if isGettingService}
 					<div
-						class="flex text-xl font-bold flex-start gap-4 p-4 justify-center items-center"
+						class="flex flex-1 flex-row text-xl font-bold gap-4 p-4 justify-center items-center"
 					>
-						Connecting
-
+					Connecting
 						<ProgressRing classes="w-10 h-10" value={null} />
 					</div>
 				{:else if $deviceConfig && $device}
@@ -204,7 +204,7 @@
 				{:else}
 					<div class="flex-col">
 						<div class="flex gap-4 items-center">
-							<button type="button" class="btn preset-filled" onclick={initializeDevice}>
+							<button type="button" class="btn preset-filled-primary-500" onclick={initializeDevice}>
 								Select Device
 							</button>
 						</div>
