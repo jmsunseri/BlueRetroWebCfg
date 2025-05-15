@@ -15,6 +15,7 @@
 	import { getService, toaster } from '$lib/utilities';
 	import { urlLatestRelease } from '$lib/constants';
 	import { onMount } from 'svelte';
+	import { base } from '$app/paths';
 
 	interface Props {
 		children?: import('svelte').Snippet;
@@ -99,7 +100,7 @@
 			<button class="btn md:hidden text-white" onclick={onMenuClick}>
 				<IconMenu2 />
 			</button>
-			<img src="/icon.png" alt="blueretro icon" class="h-9 md:pl-2" />
+			<img src="{base}/icon.png" alt="blueretro icon" class="h-9 md:pl-2" />
 			<strong class="text-xl text-white">BlueRetro</strong>
 		</div>
 		<div>
