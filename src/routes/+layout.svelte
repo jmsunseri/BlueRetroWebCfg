@@ -95,7 +95,7 @@
 	open={isDrawerOpen}
 	onOpenChange={(e: any) => (isDrawerOpen = e.open)}
 	triggerBase="btn preset-tonal"
-	contentBase="bg-surface-100-900 p-4 space-y-4 shadow-xl w-[200px] h-screen"
+	contentBase="bg-surface-100-900 p-4 space-y-4 shadow-xl w-64 h-screen"
 	positionerJustify="justify-start"
 	positionerAlign=""
 	positionerPadding=""
