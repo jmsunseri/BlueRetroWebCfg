@@ -140,7 +140,7 @@
 			onFileChange={onFileChange} maxFiles={1}
 			disabled={isDoingSomething || !$device}>
 			
-			<button class="btn preset-tonal border border-surface-500">
+			<button class="btn preset-tonal-tertiary">
 				<IconUpload class="size-4" />
 				<span>Select Firmware.bin</span>
 			</button>
@@ -165,7 +165,7 @@
 
 	<button
 		onclick={onWriteClick}
-		class="btn preset-tonal border border-surface-500"
+		class="btn preset-tonal"
 		disabled={!$isFullyInitialized || isDoingSomething || !$device || !files?.length}
 	>
 		Write</button

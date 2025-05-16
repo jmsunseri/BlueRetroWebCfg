@@ -14,6 +14,7 @@
 	let input: number = $state(0);
 	let isDoingSomething = $state(false);
 	let gameId: string = $state('');
+	let configType: ControllerConfigType = $state('global');
 
 	const getFiles = async (): Promise<IPresetFile[]> => {
 		const response = await fetch(
@@ -78,7 +79,7 @@
 	let saveButtonEnabled = $derived(preset);
 </script>
 
-<GameId bind:gameId />
+<GameId bind:gameId bind:configType />
 
 <label class="label">
 	<span>Input #</span>
@@ -99,7 +100,9 @@
 		}}
 		disabled={!$isFullyInitialized || isDoingSomething}
 	>
-		<option>Any</option>
+		{#if configType !== 'console'}
+			<option>Any</option>
+		{/if}
 		{#each Object.keys(consoles) as console}
 			<option value={console}>{console}</option>
 		{/each}
@@ -109,7 +112,7 @@
 <label class="label">
 	<span>Preset</span>
 	<select class="select" bind:value={preset} disabled={!$isFullyInitialized || isDoingSomething}>
-		{#if konsole && konsole !== 'Any'}
+		{#if konsole && (konsole !== 'Any' || configType === 'console')}
 			{#each consoles[konsole] as preset}
 				<option value={preset}>{preset.name}</option>
 			{/each}

@@ -12,11 +12,14 @@
 
 	interface Props {
 		gameId: string;
+		configType: ControllerConfigType
 	}
 
-	let { gameId = $bindable() }: Props = $props();
+	let { 
+		gameId = $bindable(),
+		configType = $bindable('global'),
+	}: Props = $props();
 	let gameName: string | undefined = $state();
-	let configType: ControllerConfigType = $state('global');
 	let isTooltipOpen: boolean = $state(false);
 	let isRefreshingGame: boolean = $state(false);
 

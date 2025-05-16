@@ -66,5 +66,10 @@
 				>Update</a
 			>
 		</li>
+		<li class="flex flex-col">
+			<a onclick={onItemSelect} class={classesActive('/system/debug')} href="{base}/system/debug"
+				>Debug</a
+			>
+		</li>
 	</ul>
 </nav>
