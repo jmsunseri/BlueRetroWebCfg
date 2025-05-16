@@ -165,7 +165,7 @@
 								<IconBluetoothConnected class="h-10" />
 
 								<div class="flex flex-col" >
-									<div class="flex sm:flex-row gap-4 flex-col" >
+									<div class="flex md:flex-row md:gap-4 flex-col" >
 										<div class="flex flex-row gap-4">
 											<div class="font-bold"> Connection:</div>
 											{$device?.name || '...'} 
@@ -175,7 +175,7 @@
 											{$deviceConfig?.appVersion || '...'}
 										</div>
 									</div>
-									<div class="flex flex-row gap-4 justify-center">
+									<div class="flex flex-row gap-4 md:justify-center">
 										<div class="font-bold">Address:</div>
 										{$deviceConfig?.bluetoothAddress || '...'}
 									</div>
