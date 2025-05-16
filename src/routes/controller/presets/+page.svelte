@@ -99,6 +99,7 @@
 		}}
 		disabled={!$isFullyInitialized || isDoingSomething}
 	>
+		<option>Any</option>
 		{#each Object.keys(consoles) as console}
 			<option value={console}>{console}</option>
 		{/each}
@@ -108,9 +109,15 @@
 <label class="label">
 	<span>Preset</span>
 	<select class="select" bind:value={preset} disabled={!$isFullyInitialized || isDoingSomething}>
-		{#if konsole}
+		{#if konsole && konsole !== 'Any'}
 			{#each consoles[konsole] as preset}
 				<option value={preset}>{preset.name}</option>
+			{/each}
+		{:else if konsole === 'Any' }
+			{#each Object.keys(consoles) as konsole}
+				{#each consoles[konsole] as preset}
+					<option value={preset}>{preset.name}</option>
+				{/each}
 			{/each}
 		{/if}
 	</select>
