@@ -139,7 +139,7 @@
 	</header>
 	<div class="flex flex-row overflow-hidden flex-1">
 		<aside
-			class="bg-surface-500/5 md:p-4 sticky top-0 w-[200px] hidden h-screen md:block"
+			class="bg-surface-500/5 md:p-4 sticky top-0 w-64 hidden h-screen md:block"
 		>
 			<NavigationMenu />
 		</aside>
