@@ -1,6 +1,6 @@
 import ButtonMapping from './ButtonMapping.svelte'
-import UploadProgress from './UploadProgress.svelte'
+import ActivityProgress from './ActivityProgress.svelte'
 import NavigationMenu from './NavigationMenu.svelte'
 import GameId from './GameId.svelte'
 
-export { ButtonMapping, UploadProgress, NavigationMenu, GameId }
+export { ButtonMapping, ActivityProgress, NavigationMenu, GameId }

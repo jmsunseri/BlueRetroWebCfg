@@ -1,6 +1,6 @@
 <script lang="ts">
 	import '../app.css';
-	import { Toaster, ProgressRing, Modal } from '@skeletonlabs/skeleton-svelte';
+	import { Toaster, ProgressRing, Modal, Progress } from '@skeletonlabs/skeleton-svelte';
 	import {
 		IconBrandGithub,
 		IconBrandDiscord,
@@ -147,10 +147,10 @@
 			<div class="p-2 md:p-4 gap-4 flex lg:flex-row flex-col">
 				{#if isGettingService}
 					<div
-						class="flex flex-1 flex-row text-xl font-bold gap-4 p-4 justify-center items-center"
+						class="flex flex-1 flex-col text-xl font-bold gap-4 p-4 justify-center items-center"
 					>
-					Connecting
-						<ProgressRing classes="w-10 h-10" value={null} />
+						Connecting...
+						<Progress height="h-4" value={null} />
 					</div>
 				{:else if $deviceConfig && $device}
 						<Modal

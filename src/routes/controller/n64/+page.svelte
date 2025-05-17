@@ -1,19 +1,17 @@
 <script lang="ts">
-	import { FileUpload, ProgressRing } from '@skeletonlabs/skeleton-svelte';
+	import { FileUpload } from '@skeletonlabs/skeleton-svelte';
 	import { block, brUuid, mtu, pakSize } from '$lib/constants';
 	import { downloadFile, toaster, getService } from '$lib/utilities';
 	import { isFullyInitialized, device } from '$lib/stores';
-	import { UploadProgress } from '$lib/components';
+	import { ActivityProgress } from '$lib/components';
 	import { IconUpload, IconX } from '@tabler/icons-svelte';
 
 	let pakNumber = $state(0);
 	let progress = $state(0);
 	let isDoingSomething = $state(false);
-	let isReading = $state(false);
-	let isWriting = $state(false);
-	let isFormatting = $state(false);
 	let isCanceling = false;
 	let files: FileList | undefined = $state();
+	let activityProgressLabel = $state('');
 
 
 	const n64ReadFileRecursive = async (
@@ -23,7 +21,7 @@
 	): Promise<Uint8Array> => {
 		if (isCanceling) {
 			isCanceling = false;
-			throw new Error('Cancelled');
+			throw new Error('Canceled');
 		}
 		progress = Math.round((offset / pakSize) * 100);
 		const value = await chrc.readValue();
@@ -100,11 +98,11 @@
 		var data = new Uint8Array(pakSize);
 		var offset = new Uint32Array([Number(pak) * pakSize]);
 		let ctrl_chrc = await serv.getCharacteristic(brUuid[10]);
-		ctrl_chrc.writeValue(offset);
+		await ctrl_chrc.writeValue(offset);
 		const chrc = await serv.getCharacteristic(brUuid[11]);
 		await n64ReadFileRecursive(chrc, data, 0);
 		offset[0] = 0;
-		ctrl_chrc.writeValue(offset);
+		await ctrl_chrc.writeValue(offset);
 		return data;
 	};
 
@@ -116,7 +114,7 @@
 		var curBlock = ~~(offset / block) + 1;
 		if (isCanceling) {
 			isCanceling = false;
-			throw new Error('Cancelled');
+			throw new Error('Canceled');
 		}
 		progress = Math.round((offset / data.byteLength) * 100);
 		let tmpViewSize = curBlock * block - offset;
@@ -143,8 +141,8 @@
 	};
 
 	const onReadClick = async () => {
-		isReading = true;
 		isDoingSomething = true;
+		activityProgressLabel = 'Reading...';
 		try {
 			const data = await n64ReadFile(pakNumber);
 			downloadFile(
@@ -152,31 +150,42 @@
 				`ctrl_pak-${pakNumber + 1}.mpk`
 			);
 			toaster.success({ title: 'Success reading controller pak'});
-		} catch (error) {
-			toaster.error({ title: 'There was an error reading the controller pak!'});
-		}
+		} catch (error: any) {
+			console.log('error', error);
+			if(error.message !== 'Canceled') {
+				toaster.error({ title: 'There was an error reading the controller pak!'});
+			}
+		} 
 		isDoingSomething = false;
-		isReading = false;
 		progress = 0;
 	};
 
 	const onWriteClick = async () => {
 		isDoingSomething = true;
-		isWriting = true;
+		activityProgressLabel = 'Writing...';
 		if(files?.length) {
 			try {
 				const reader = new FileReader();
 				reader.onabort = (_) => {
-					console.log('File write cancelled');
+					console.log('File write canceled');
+					toaster.error({ title: 'File write was canceled'});
+					isDoingSomething = false;
 				};
 				reader.onload = async (_) => {
-					const data = reader.result?.slice(0, pakSize);
-					if (data && data instanceof ArrayBuffer) {
-						await n64WriteFile(data, pakNumber);
+					try {
+						const data = reader.result?.slice(0, pakSize);
+						if (data && data instanceof ArrayBuffer) {
+							await n64WriteFile(data, pakNumber);
+							toaster.success({ title: 'Success writing'});
+						}else {
+							toaster.error({ title: 'Unable to read file!'});
+						}
+					} catch (error: any) {
+						if(error.message !== 'Canceled') {
+							toaster.error({ title: 'Unable to write the file!'});
+						}
 					}
-					toaster.success({ title: 'Success writing'});
 					isDoingSomething = false;
-					isWriting = false;
 					progress = 0;
 				};
 
@@ -185,7 +194,6 @@
 			} catch {
 				toaster.error({ title: 'There was an error writing!'});
 				isDoingSomething = false;
-				isWriting = false;
 				progress = 0;
 			}
 		}
@@ -193,15 +201,16 @@
 
 	const onFormatClick = async () => {
 		isDoingSomething = true;
-		isFormatting = true;
+		activityProgressLabel = 'Formatting...';
 		try {
 			await n64WriteFile(makeFormattedPak().buffer, pakNumber);
 			toaster.success({ title: 'Success formatting'});
-		} catch (error) {
-			toaster.error({ title: 'There was an error formatting!'});
+		} catch (error: any) {
+			if(error.message !== 'Canceled') {
+				toaster.error({ title: 'There was an error formatting!'});
+			}
 		}
 		isDoingSomething = false;
-		isFormatting = false;
 		progress = 0;
 	};
 
@@ -234,9 +243,6 @@
 			disabled={isDoingSomething || !$isFullyInitialized}
 		>
 			Read
-			{#if $isFullyInitialized && isReading}
-				<ProgressRing classes="w-6 h-6" value={null} />
-			{/if}
 		</button>
 
 		<button
@@ -245,9 +251,6 @@
 			disabled={isDoingSomething || !$isFullyInitialized}
 		>
 			Format
-			{#if $isFullyInitialized && isFormatting}
-				<ProgressRing classes="w-6 h-6" value={null} />
-			{/if}
 		</button>
 
 		<div class="flex flex-row items-center gap-4">
@@ -286,12 +289,15 @@
 			disabled={isDoingSomething || !$isFullyInitialized || !files?.length}
 		>
 			Write
-			{#if $isFullyInitialized && isWriting}
-				<ProgressRing classes="w-6 h-6" value={null} />
-			{/if}
 		</button>
 	</div>
-	<UploadProgress max={100} onCancelClick={cancelClick} {progress} />
+	<ActivityProgress 
+		{isDoingSomething} 
+		max={100} 
+		onCancelClick={cancelClick} 
+		{progress}
+		labelText={activityProgressLabel}
+	/>
 
 	<p>
 		Use <a class="anchor" href="https://bryc.github.io/mempak">https://bryc.github.io/mempak</a> (by

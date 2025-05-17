@@ -87,8 +87,8 @@
 		isDoingSomething = false;
 	};
 
-	run(() => {
-		if ($isFullyInitialized && ($deviceConfig?.files?.length || 0) == 0 && !isDoingSomething) {
+	$effect.pre(() => {
+		if ($isFullyInitialized && ($deviceConfig?.files?.length || 0) == 0) {
 			getFiles();
 		}
 	});

@@ -34,6 +34,11 @@
 				>N64 Controller Pack</a
 			>
 		</li>
+		<li class="flex flex-col">
+			<a onclick={onItemSelect} class={classesActive('/controller/dcvmu')} href="{base}/controller/dcvmu"
+				>DC VMU Manager</a
+			>
+		</li>
 		<p class="font-bold text-xl">Button Mappings</p>
 		<li class="flex flex-col">
 			<a

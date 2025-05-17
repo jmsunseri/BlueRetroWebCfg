@@ -1,17 +1,15 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import {
 		brUuid,
 		cfg_cmd_ota_abort,
 		cfg_cmd_ota_end,
 		cfg_cmd_ota_start,
 		mtu,
-		urlLatestRelease
 	} from '$lib/constants';
 	import { device, deviceConfig, service, isFullyInitialized, latestVersion } from '$lib/stores';
 	import { FileUpload } from '@skeletonlabs/skeleton-svelte';
 	import { toaster, getService } from '$lib/utilities';
-	import { UploadProgress } from '$lib/components';
+	import { ActivityProgress } from '$lib/components';
 	import { IconUpload, IconX } from '@tabler/icons-svelte';
 
 	
@@ -171,4 +169,4 @@
 		Write</button
 	>
 </div>
-<UploadProgress max={100} onCancelClick={cancelClick} {progress} {isDoingSomething} />
+<ActivityProgress max={100} onCancelClick={cancelClick} {progress} {isDoingSomething} labelText="Updating..." />

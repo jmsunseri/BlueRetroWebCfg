@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { UploadProgress } from '$lib/components';
+	import { ActivityProgress } from '$lib/components';
 	import { device, isFullyInitialized } from '$lib/stores';
 	import { downloadFile, getService, toaster } from '$lib/utilities';
 	import { dcReadFile } from '$lib/utilities/dcReadFile';
@@ -8,8 +8,6 @@
 	let isDoingSomething = $state(false);
 	let progress = $state(0);
 	let cancelationToken: ICancellationToken = $state({ isCanceled: false });
-
-
 
 	const cancelClick = () => {
 		cancelationToken.isCanceled = true;
@@ -37,11 +35,6 @@ const pakRead = async () =>  {
 	isDoingSomething = false;
 	progress = 0;
 }
-
-
-
-
-
 </script>
 
 <p>
@@ -59,4 +52,10 @@ const pakRead = async () =>  {
 </button>
 
 
-<UploadProgress max={100} onCancelClick={cancelClick} {progress} {isDoingSomething} />
+<ActivityProgress 
+	max={100} 
+	onCancelClick={cancelClick} 
+	{progress} 
+	{isDoingSomething}
+	labelText="Reading..."
+/>
