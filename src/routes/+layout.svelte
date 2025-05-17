@@ -58,6 +58,7 @@
 	};
 
 	const onSwitchDeviceClick = async () => {
+		isIntentionallyDisconnecting = true;
 		if ($device?.gatt?.connected) {
 			$device.gatt.disconnect();
 		}
@@ -78,7 +79,7 @@
 	const onDisconnectedListener = async (_: Event) => {
 		if(isIntentionallyDisconnecting) {
 			isIntentionallyDisconnecting = false;
-		} else if($device) {
+		} else if(!isIntentionallyDisconnecting && $device) {
 			toaster.error({ title: 'The connection to the BlueRetro device was lost. Attempting to reestablish a connection' });
 			deviceConfig.set(undefined);
 			service.set(undefined);
