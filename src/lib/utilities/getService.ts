@@ -7,23 +7,26 @@ import { getDeviceConfiguration } from './getConfiguration';
 const getGattService = async (
     device: BluetoothDevice,
     retry: number = 0,
+    cancellationToken?: ICancellationToken
 ): Promise<BluetoothRemoteGATTService | undefined> => {
 
-    if (retry < maxConnectRetries) {
+    if (retry < maxConnectRetries && !cancellationToken?.isCanceled) {
         try {
             if (!device.gatt?.connected) {
                 console.log('Connecting to GATT Server...');
                 await device.gatt?.connect();
             }
-            if (device.gatt?.connected) {
+            if (device.gatt?.connected && !cancellationToken?.isCanceled) {
                 console.log('Getting BlueRetro Service...');
                 return await device.gatt.getPrimaryService(brUuid[0]);
-            } else {
-                return await getGattService(device, retry + 1);
+            } else if(!cancellationToken?.isCanceled) {
+                return await getGattService(device, retry + 1, cancellationToken);
             }
         } catch (error) {
             console.log('error connecting to gat service', error);
-            return await getGattService(device, retry + 1);
+            if(!cancellationToken?.isCanceled) {
+                return await getGattService(device, retry + 1, cancellationToken);
+            }
         }
     } else {
         return undefined;
@@ -31,9 +34,9 @@ const getGattService = async (
 
 };
 
-const getService = async (retry: number = 0): Promise<BluetoothRemoteGATTService> => {
+const getService = async (retry: number = 0, cancellationToken?: ICancellationToken): Promise<BluetoothRemoteGATTService | undefined> => {
     let dev: BluetoothDevice | undefined;
-    if (retry < maxConnectRetries) {
+    if (retry < maxConnectRetries && !cancellationToken?.isCanceled) {
         try {
             dev = get(device);
             if (!dev) {
@@ -47,9 +50,9 @@ const getService = async (retry: number = 0): Promise<BluetoothRemoteGATTService
             }
 
             let serv = get(service);
-            if (!serv || !dev.gatt.connected) {
+            if ((!serv || !dev.gatt.connected) && !cancellationToken?.isCanceled) {
                 console.log('Getting new connection to GATT service');
-                serv = await getGattService(dev);
+                serv = await getGattService(dev, 0, cancellationToken);
                 if (!serv) {
                     throw new Error('Unable to connect to the GATT service');
                 }
@@ -59,9 +62,9 @@ const getService = async (retry: number = 0): Promise<BluetoothRemoteGATTService
             }
             return serv;
         } catch (error) {
-            if (dev) {
+            if (dev && !cancellationToken?.isCanceled) {
                 console.log('Error trying to establish connection to GATT service retrying...', error)
-                return await getService(retry + 1);
+                return await getService(retry + 1, cancellationToken);
             }
 
         }
@@ -69,7 +72,9 @@ const getService = async (retry: number = 0): Promise<BluetoothRemoteGATTService
     deviceConfig.set(undefined);
     device.set(undefined);
     service.set(undefined);
-    throw new Error('Max connection retries exceeded');
+    if(!cancellationToken?.isCanceled) {
+        throw new Error('Max connection retries exceeded');
+    }
 }
 
 export { getService }

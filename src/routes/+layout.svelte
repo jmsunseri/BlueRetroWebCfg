@@ -9,7 +9,7 @@
 		IconDownload
 	} from '@tabler/icons-svelte';
 	import { deviceConfig, device, service, latestVersion } from '$lib/stores';
-	import { NavigationMenu } from '$lib/components';
+	import { NavigationMenu, ActivityProgress } from '$lib/components';
 	import { getService, toaster } from '$lib/utilities';
 	import { urlLatestRelease } from '$lib/constants';
 	import { onMount } from 'svelte';
@@ -25,6 +25,7 @@
 	let isDrawerOpen = $state(false);
 	let isConnectedModalOpen = $state(false);
 	let isIntentionallyDisconnecting = $state(false);
+	let cancellationToken: ICancellationToken = $state({ isCanceled: false })
 
 	const unselectDevice = () => {
 		device.set(undefined);
@@ -35,12 +36,17 @@
 	const initializeDevice = async () => {
 		isGettingService = true;
 		try {
-			await getService();
-			toaster.success({ title: 'Successfully connected to the BlueRetro service' });
+			await getService(0, cancellationToken);
+			if(!cancellationToken.isCanceled) {
+				toaster.success({ title: 'Successfully connected to the BlueRetro service' });
+			}
+			
 			isGettingService = false;
 		} catch (error) {
 			console.log('Error initializing device', error);
-			toaster.error({ title: 'Error initializing connection to BlueRetro device' });
+			if(!cancellationToken.isCanceled) {
+				toaster.error({ title: 'Error initializing connection to BlueRetro device' });
+			}
 			isGettingService = false;
 		}
 	};
@@ -59,6 +65,7 @@
 
 	const onSwitchDeviceClick = async () => {
 		isIntentionallyDisconnecting = true;
+		cancellationToken.isCanceled = false;
 		if ($device?.gatt?.connected) {
 			$device.gatt.disconnect();
 		}
@@ -69,6 +76,7 @@
 
 	const onDisconnectClick = async () => {
 		isIntentionallyDisconnecting = true;
+		cancellationToken.isCanceled = false;
 		if ($device?.gatt?.connected) {
 			$device.gatt.disconnect();
 		}
@@ -85,6 +93,17 @@
 			service.set(undefined);
 			await initializeDevice();
 		}
+	}
+
+	const onConnectCancelClick = () => {
+		cancellationToken.isCanceled = true;
+		unselectDevice();
+		isGettingService = false;
+	}
+
+	const onSelectDeviceClick = async () => {
+		cancellationToken.isCanceled = false;
+		await initializeDevice();
 	}
 
 	$effect(() => {
@@ -144,15 +163,22 @@
 		>
 			<NavigationMenu />
 		</aside>
-		<div class="flex-1 flex flex-col">
+		<div class="flex-1 flex flex-col max-w-2xl">
 			<div class="p-2 md:p-4 gap-4 flex lg:flex-row flex-col">
 				{#if isGettingService}
 					<div
-						class="flex flex-1 flex-col text-xl font-bold gap-4 p-4 justify-center items-center"
+						class="flex flex-1 flex-col text-xl font-bold gap-4"
 					>
-						Connecting...
-						<Progress height="h-4" value={null} />
+						<div class="flex flex-row justify-center" >
+							Connecting...
+						</div>
+						<ActivityProgress 
+							progress={null} 
+							onCancelClick={onConnectCancelClick} 
+							isDoingSomething={true}
+						/>
 					</div>
+					
 				{:else if $deviceConfig && $device}
 						<Modal
 							open={isConnectedModalOpen}
@@ -202,7 +228,7 @@
 				{:else}
 					<div class="flex-col">
 						<div class="flex gap-4 items-center">
-							<button type="button" class="btn preset-filled-primary-500" onclick={initializeDevice}>
+							<button type="button" class="btn preset-filled-primary-500" onclick={onSelectDeviceClick}>
 								Select Device
 							</button>
 						</div>

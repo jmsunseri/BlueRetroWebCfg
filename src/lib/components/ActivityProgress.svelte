@@ -4,10 +4,10 @@
 
 	interface Props {
 		isDoingSomething?: boolean;
-		progress?: number;
+		progress?: number | null;
 		max?: number;
 		onCancelClick: VoidFunction;
-		labelText: string;
+		labelText?: string;
 	}
 
 	let {
@@ -20,8 +20,8 @@
 </script>
 
 {#if isDoingSomething}
-	<div class="flex flex-row gap-4 items-center">
-		<Progress height="h-4" value={progress} {max} >{labelText}</Progress>
+	<div class="flex flex-row items-center">
+		<Progress height="h-4" classes="gap-0" value={progress} {max} >{labelText}</Progress>
 		<button class="btn btn-icon text-error-500" onclick={onCancelClick}>
 			<IconSquareX />
 		</button>
