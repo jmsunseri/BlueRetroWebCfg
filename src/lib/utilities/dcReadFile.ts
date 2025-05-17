@@ -9,13 +9,11 @@ const dcReadFile = async (
     var data = new Uint8Array(vmuSize);
    
     const offset = new Uint32Array(1);
-    let ctrl_chrc : BluetoothRemoteGATTCharacteristic | null = null;
-    const chrc = await service.getCharacteristic(brUuid[10])
-    ctrl_chrc = chrc;
+    let ctrl_chrc = await service.getCharacteristic(brUuid[10]);
     offset[0] = 0;
     await ctrl_chrc.writeValue(offset);
-    const otherChrc = await service.getCharacteristic(brUuid[11]);
-    await dcReadFileRecursive(otherChrc, data, 0, setProgress, cancellationToken);
+    const chrc = await service.getCharacteristic(brUuid[11]);
+    await dcReadFileRecursive(chrc, data, 0, setProgress, cancellationToken);
     offset[0] = 0;
     await ctrl_chrc.writeValue(offset);
 

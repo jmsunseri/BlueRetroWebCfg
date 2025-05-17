@@ -51,6 +51,10 @@
 		activityProgressLabel = 'Reading...';
 		try {
 			const data = await dcReadFile();
+			let view = new DataView(data.buffer);
+			for (let i = 0; i < vmuSize; i += 4) {
+				view.setUint32(i, view.getUint32(i), true)
+			}
 			downloadFile(new Blob([data.buffer], { type: 'application/bin' }),`vmu.bin`);
 			toaster.success({ title: 'Success reading controller vmu'});
 		} catch (error: any) {
